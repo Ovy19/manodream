@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
 // ── TYPES ──
 type PanelShape = "rect" | "diag-right" | "diag-left" | "small-square" | "full";
@@ -200,7 +201,53 @@ export default function StudioPage() {
   const [bubbleBg, setBubbleBg] = useState("#ffffff");
   const [bubbleColor, setBubbleColor] = useState("#000000");
   const [respColor, setRespColor] = useState("#000000");
+  const [titre, setTitre] = useState("Épisode 1");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+  const [episodeId, setEpisodeId] = useState<string | null>(null);
+  const [preview, setPreview] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Charger épisode existant
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("episodes")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single();
+      if (data) {
+        setEpisodeId(data.id);
+        setTitre(data.titre);
+        setBlocks(data.blocks || []);
+        setBubbles(data.bubbles || []);
+      }
+    };
+    load();
+  }, []);
+
+  // Sauvegarder
+  const save = useCallback(async () => {
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSaveMsg("Non connecté"); setSaving(false); return; }
+
+    const payload = { user_id: user.id, titre, blocks, bubbles, updated_at: new Date().toISOString() };
+
+    if (episodeId) {
+      await supabase.from("episodes").update(payload).eq("id", episodeId);
+    } else {
+      const { data } = await supabase.from("episodes").insert(payload).select().single();
+      if (data) setEpisodeId(data.id);
+    }
+    setSaveMsg("✅ Sauvegardé !");
+    setSaving(false);
+    setTimeout(() => setSaveMsg(""), 3000);
+  }, [blocks, bubbles, titre, episodeId]);
 
   // Ajouter un layout
   const addRow = (layout: typeof LAYOUTS[0]) => {
@@ -386,12 +433,67 @@ export default function StudioPage() {
       {/* ── CANVAS CENTRAL ── */}
       <div style={{ marginLeft: "240px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 24px 80px", background: "#f0f2f5" }}>
 
-        <div style={{ width: "100%", maxWidth: "600px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "28px", letterSpacing: "3px", color: "#1a1a2e" }}>
-            Studio — Épisode 1
-          </h1>
-          <a href="/" style={{ fontSize: "11px", color: "#94a3b8", letterSpacing: "2px", textDecoration: "none" }}>← Retour</a>
+        <div style={{ width: "100%", maxWidth: preview ? "400px" : "600px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+          <input
+            value={titre}
+            onChange={(e) => setTitre(e.target.value)}
+            style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "24px", letterSpacing: "3px", color: "#1a1a2e", border: "none", background: "transparent", outline: "none", flex: 1 }}
+          />
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {saveMsg && <span style={{ fontSize: "11px", color: "#4a90d9" }}>{saveMsg}</span>}
+            <button onClick={() => setPreview(!preview)} style={{
+              padding: "8px 16px", background: preview ? "#4a90d9" : "#f0f2f5",
+              border: "1px solid #e2e8f0", color: preview ? "white" : "#64748b",
+              fontSize: "11px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "1px",
+            }}>
+              {preview ? "✏️ Éditer" : "👁 Aperçu"}
+            </button>
+            <button onClick={save} disabled={saving} style={{
+              padding: "8px 16px", background: "#4a90d9", border: "none",
+              color: "white", fontSize: "11px", fontWeight: 700,
+              cursor: "pointer", borderRadius: "4px", letterSpacing: "1px",
+            }}>
+              {saving ? "..." : "💾 Sauvegarder"}
+            </button>
+            <a href="/" style={{ fontSize: "11px", color: "#94a3b8", letterSpacing: "2px", textDecoration: "none" }}>← Retour</a>
+          </div>
         </div>
+
+        {/* MODE PREVIEW WEBTOON */}
+        {preview && (
+          <div style={{ width: "100%", maxWidth: "400px", background: "#000", borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ padding: "12px 16px", background: "#111", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "14px", letterSpacing: "3px", color: "#f0eff8" }}>APERÇU WEBTOON</span>
+              <span style={{ fontSize: "10px", color: "#555", letterSpacing: "1px" }}>MOBILE · 9:16</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {blocks.map((block) => {
+                if (block.type === "respiration") {
+                  const resp = block.data as Respiration;
+                  return <div key={resp.id} style={{ width: "100%", height: `${resp.height}px`, background: resp.color }} />;
+                }
+                const row = block.data as Row;
+                return (
+                  <div key={row.id} style={{ display: "flex", width: "100%", minHeight: "160px", gap: "1px" }}>
+                    {row.panels.map((panel: Panel) => (
+                      <div key={panel.id} style={{
+                        flex: panel.flex,
+                        background: panel.image ? `url(${panel.image}) center/cover` : "#1a1a1a",
+                        minHeight: "160px",
+                        clipPath: panel.shape === "diag-right" ? "polygon(0 0, 100% 0, 85% 100%, 0% 100%)"
+                          : panel.shape === "diag-left" ? "polygon(15% 0, 100% 0, 100% 100%, 0% 100%)" : "none",
+                      }}>
+                        {!panel.image && (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#333", fontSize: "20px" }}>🖼️</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {blocks.length === 0 && (
           <div style={{
