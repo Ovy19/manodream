@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
 // ── TYPES ──
-type BubbleShape = "round" | "rect" | "explosion" | "thought" | "shout";
+type BubbleShape = "round" | "rect" | "explosion" | "thought" | "shout" | "narration" | "caption";
 
 type PanelWidth = "full" | "wide" | "medium" | "small";   // % de la largeur du canvas
 type PanelAlign = "left" | "center" | "right";
@@ -76,6 +76,8 @@ const BUBBLE_SHAPES: { shape: BubbleShape; label: string; icon: string }[] = [
   { shape: "explosion", label: "Explosive", icon: "💥" },
   { shape: "thought", label: "Pensée", icon: "💭" },
   { shape: "shout", label: "Cri", icon: "📢" },
+  { shape: "narration", label: "Narration", icon: "📋" },
+  { shape: "caption", label: "Caption", icon: "🎬" },
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 8);
@@ -90,24 +92,75 @@ const widthPct = (w: PanelWidth) => {
 // ── SVG BULLES ──
 function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string }) {
   const stroke = color === "#ffffff" ? "#000" : color;
+  const mangaFont = "var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)";
+
+  // 📋 NARRATION — rectangle blanc bordure noire, texte gauche, sans queue (style tes planches)
+  if (shape === "narration") return (
+    <div style={{
+      width: "100%", height: "100%",
+      background: bgColor === "#000000" ? "#000" : "#ffffff",
+      border: `3px solid #000`,
+      display: "flex", alignItems: "flex-start",
+      padding: "10px 12px",
+      boxSizing: "border-box",
+    }}>
+      <span style={{
+        fontFamily: mangaFont,
+        fontSize: `${fontSize + 2}px`,
+        fontWeight: 700,
+        color: bgColor === "#000000" ? "#ffffff" : "#000000",
+        textTransform: "uppercase",
+        letterSpacing: "1px",
+        lineHeight: 1.3,
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+      }}>{text}</span>
+    </div>
+  );
+
+  // 🎬 CAPTION — grande boîte narration centrée, texte dramatique (comme bas de planche)
+  if (shape === "caption") return (
+    <div style={{
+      width: "100%", height: "100%",
+      background: bgColor === "#000000" ? "#000" : "#ffffff",
+      border: `4px solid #000`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "12px 16px",
+      boxSizing: "border-box",
+    }}>
+      <span style={{
+        fontFamily: mangaFont,
+        fontSize: `${fontSize + 4}px`,
+        fontWeight: 700,
+        color: bgColor === "#000000" ? "#ffffff" : "#000000",
+        textTransform: "uppercase",
+        letterSpacing: "2px",
+        lineHeight: 1.25,
+        textAlign: "center",
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+      }}>{text}</span>
+    </div>
+  );
+
   if (shape === "round") return (
     <svg viewBox="0 0 200 120" style={{ width: "100%", height: "100%" }}>
       <ellipse cx="100" cy="55" rx="95" ry="45" fill={bgColor} stroke={stroke} strokeWidth="2"/>
       <polygon points="60,95 80,100 70,115" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="60" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily="'Bebas Neue', sans-serif" fontWeight="bold">{text}</text>
+      <text x="100" y="60" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily={mangaFont} fontWeight="bold">{text}</text>
     </svg>
   );
   if (shape === "rect") return (
     <svg viewBox="0 0 200 120" style={{ width: "100%", height: "100%" }}>
-      <rect x="5" y="5" width="190" height="90" rx="4" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      <rect x="5" y="5" width="190" height="90" rx="2" fill={bgColor} stroke={stroke} strokeWidth="3"/>
       <polygon points="70,95 90,100 80,115" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="52" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily="'Bebas Neue', sans-serif">{text}</text>
+      <text x="100" y="52" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily={mangaFont} fontWeight="bold">{text}</text>
     </svg>
   );
   if (shape === "explosion") return (
     <svg viewBox="0 0 200 140" style={{ width: "100%", height: "100%" }}>
       <polygon points="100,5 120,45 165,20 145,60 195,65 155,90 175,130 130,110 120,140 100,105 80,140 70,110 25,130 45,90 5,65 55,60 35,20 85,45" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="75" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily="'Bebas Neue', sans-serif" fontWeight="bold">{text}</text>
+      <text x="100" y="75" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily={mangaFont} fontWeight="bold">{text}</text>
     </svg>
   );
   if (shape === "thought") return (
@@ -119,13 +172,14 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleSha
       <text x="100" y="58" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily="Georgia, serif" fontStyle="italic">{text}</text>
     </svg>
   );
+  // shout
   return (
     <svg viewBox="0 0 200 120" style={{ width: "100%", height: "100%" }}>
       <rect x="5" y="5" width="190" height="80" fill={bgColor} stroke={stroke} strokeWidth="3"/>
       <line x1="5" y1="5" x2="195" y2="85" stroke={stroke} strokeWidth="1" opacity="0.3"/>
       <line x1="195" y1="5" x2="5" y2="85" stroke={stroke} strokeWidth="1" opacity="0.3"/>
       <polygon points="85,85 105,85 95,110" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="48" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize + 2} fill={stroke} fontFamily="'Bebas Neue', sans-serif" fontWeight="bold" letterSpacing="2">{text}</text>
+      <text x="100" y="48" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize + 2} fill={stroke} fontFamily={mangaFont} fontWeight="bold" letterSpacing="2">{text}</text>
     </svg>
   );
 }

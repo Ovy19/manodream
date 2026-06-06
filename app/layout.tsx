@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Rajdhani, Cinzel } from "next/font/google";
+import { Bebas_Neue, Rajdhani, Cinzel, Bangers } from "next/font/google";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -20,6 +20,12 @@ const cinzel = Cinzel({
   variable: "--font-cinzel",
 });
 
+const bangers = Bangers({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bangers",
+});
+
 export const metadata: Metadata = {
   title: "MANODREAM",
   description: "Webtoon original — Action · Fantastique · Aventure",
@@ -29,7 +35,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={`${bebasNeue.variable} ${rajdhani.variable} ${cinzel.variable}`}>
+    <html lang="fr" className={`${bebasNeue.variable} ${rajdhani.variable} ${cinzel.variable} ${bangers.variable}`}>
       <body>{children}</body>
     </html>
   );
