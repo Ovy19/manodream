@@ -35,6 +35,14 @@ export default function Home() {
           color: #f0eff8; text-decoration: none;
         }
         .nav-logo span { color: #c0392b; }
+        .nav-conn {
+          font-family: var(--font-rajdhani), sans-serif;
+          font-size: 11px; font-weight: 700; letter-spacing: 2px;
+          text-transform: uppercase; padding: 5px 14px;
+          border: 1px solid rgba(192,57,43,0.4); color: #8b8b9a;
+          text-decoration: none; transition: all 0.2s;
+        }
+        .nav-conn:hover { border-color: #c0392b; color: #f0eff8; }
 
         /* ── HERO PLATEFORME ── */
         .hero {
@@ -237,6 +245,7 @@ export default function Home() {
       {/* NAV */}
       <nav>
         <a className="nav-logo" href="/">MANO<span>DREAM</span></a>
+        <a className="nav-conn" href="/connexion">Connexion</a>
       </nav>
 
       {/* HERO */}
