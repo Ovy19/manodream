@@ -8,7 +8,8 @@ const EPISODES: Record<string, { title: string; panels: { type: number; icon: st
     title: "L'Éveil du Rêveur",
     panels: [
       { type: 1, icon: "⚔", label: "Planche 1 — Ouverture", src: "/planches/ch1-p1.png" },
-      { type: 2, icon: "🌙", label: "Planche 2 — PRIMO BURST", src: "/planches/ch1-p2.png" },
+      { type: 3, icon: "💥", label: "Planche 2", src: "/planches/ch1-p3.png" },
+      { type: 2, icon: "🌙", label: "Planche 3 — PRIMO BURST", src: "/planches/ch1-p2.png" },
     ],
   },
   "2": {
