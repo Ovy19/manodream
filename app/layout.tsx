@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Rajdhani, Cinzel, Bangers, Nunito } from "next/font/google";
+import { Bebas_Neue, Rajdhani, Cinzel, Bangers, Nunito, Oswald } from "next/font/google";
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -32,6 +32,12 @@ const nunito = Nunito({
   variable: "--font-nunito",
 });
 
+const oswald = Oswald({
+  weight: ["600", "700"],
+  subsets: ["latin"],
+  variable: "--font-oswald",
+});
+
 export const metadata: Metadata = {
   title: "MANODREAM",
   description: "Webtoon original — Action · Fantastique · Aventure",
@@ -41,7 +47,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={`${bebasNeue.variable} ${rajdhani.variable} ${cinzel.variable} ${bangers.variable} ${nunito.variable}`}>
+    <html lang="fr" className={`${bebasNeue.variable} ${rajdhani.variable} ${cinzel.variable} ${bangers.variable} ${nunito.variable} ${oswald.variable}`}>
       <body>{children}</body>
     </html>
   );

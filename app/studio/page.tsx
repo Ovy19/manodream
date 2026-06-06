@@ -178,7 +178,7 @@ function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFo
 function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string }) {
   const stroke = "#111111";
   // Police naturelle pour le dialogue — pas Bangers (trop SFX), mais bold condensé lisible
-  const dialogFont = "'Nunito', 'Rajdhani', sans-serif";
+  const dialogFont = "var(--font-oswald, 'Oswald', 'Rajdhani', sans-serif)";
   const mangaFont = "var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)";
 
   // ID unique pour les filtres SVG
@@ -198,11 +198,11 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleSha
     </defs>
   );
 
-  // 📋 NARRATION / 🎬 CAPTION — style main levée
+  // 📋 NARRATION / 🎬 CAPTION — style main levée, police planche originale
   if (shape === "narration") return (
     <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text} fontSize={fontSize + 2} align="left" bold={false} mangaFont={dialogFont} />
+      text={text} fontSize={fontSize + 2} align="left" bold={true} mangaFont={dialogFont} />
   );
   if (shape === "caption") return (
     <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
