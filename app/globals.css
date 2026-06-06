@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0a0a0f;
+  --void: #06060a;
+  --blood: #c0392b;
+  --fire: #e74c3c;
+  --ember: #ff6b35;
+  --ash: #8b8b9a;
+  --silver: #c8c8d8;
+  --light: #f0eff8;
+  --glow: rgba(192,57,43,0.4);
+  --panel: rgba(15,15,25,0.9);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--void);
+  color: var(--light);
+  font-family: 'Rajdhani', sans-serif;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.6;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--blood); }
