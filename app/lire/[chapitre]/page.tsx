@@ -3,98 +3,49 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
-const EPISODES: Record<string, { title: string; panels: { type: number; icon: string; label: string; src?: string }[] }> = {
+const EPISODES: Record<string, { title: string; panels: { src?: string; label: string }[] }> = {
   "1": {
-    title: "L'Éveil du Rêveur",
+    title: "L'Éveil",
     panels: [
-      { type: 1, icon: "⚔", label: "Planche 1 — Ouverture", src: "/planches/ch1-p1.png" },
-      { type: 3, icon: "💥", label: "Planche 2", src: "/planches/ch1-p3.png" },
-      { type: 2, icon: "🌙", label: "Planche 3 — PRIMO BURST", src: "/planches/ch1-p2.png" },
+      { label: "Planche 1", src: "/planches/ch1-p1.png" },
+      { label: "Planche 2", src: "/planches/ch1-p3.png" },
+      { label: "Planche 3", src: "/planches/ch1-p2.png" },
     ],
   },
   "2": {
     title: "Les Portes de l'Ombre",
     panels: [
-      { type: 2, icon: "🌑", label: "Planche 1 — Le passage" },
-      { type: 3, icon: "⚔", label: "Planche 2 — L'adversaire" },
-      { type: 1, icon: "💥", label: "Planche 3 — Combat" },
-      { type: 4, icon: "🔥", label: "Planche 4 — Explosion de pouvoir" },
+      { label: "Planche 1 — Le passage" },
+      { label: "Planche 2 — L'adversaire" },
+      { label: "Planche 3 — Combat" },
     ],
   },
   "3": {
     title: "Fragments de Mémoire",
     panels: [
-      { type: 3, icon: "🌊", label: "Planche 1 — Les flashbacks" },
-      { type: 1, icon: "👁", label: "Planche 2 — La vérité" },
-      { type: 5, icon: "⚡", label: "Planche 3 — Nouvelle mission" },
-      { type: 2, icon: "🌙", label: "Planche 4 — Épilogue" },
+      { label: "Planche 1 — Les flashbacks" },
+      { label: "Planche 2 — La vérité" },
+      { label: "Planche 3 — Épilogue" },
     ],
   },
 };
 
-const PANEL_STYLES: Record<number, string> = {
-  1: "linear-gradient(160deg, #0d0508 0%, #12080e 40%, #080810 100%)",
-  2: "linear-gradient(200deg, #080a12 0%, #0f0808 60%, #0a0a0a 100%)",
-  3: "linear-gradient(140deg, #06080f 0%, #0e0608 50%, #0a0808 100%)",
-  4: "linear-gradient(180deg, #0a0a14 0%, #0f0808 100%)",
-  5: "linear-gradient(160deg, #0d0508 0%, #080812 100%)",
-};
-
-const PANEL_HEIGHTS: Record<number, string> = {
-  1: "480px", 2: "360px", 3: "560px", 4: "400px", 5: "520px",
-};
-
-const PANEL_GLOW: Record<number, string> = {
-  1: "radial-gradient(ellipse at 50% 30%, rgba(192,57,43,0.18) 0%, transparent 60%)",
-  2: "radial-gradient(ellipse at 70% 50%, rgba(231,76,60,0.12) 0%, transparent 55%)",
-  3: "radial-gradient(ellipse at 30% 60%, rgba(192,57,43,0.2) 0%, transparent 50%)",
-  4: "radial-gradient(ellipse at 60% 40%, rgba(255,107,53,0.1) 0%, transparent 50%)",
-  5: "radial-gradient(ellipse at 40% 50%, rgba(192,57,43,0.15) 0%, transparent 60%)",
-};
-
-function PanelPlaceholder({ icon, label, type, src }: { icon: string; label: string; type: number; src?: string }) {
-  if (src) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={src} alt={label} style={{ width: "100%", display: "block" }} />
-    );
-  }
+function PlaceholderPanel({ label }: { label: string }) {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: PANEL_HEIGHTS[type],
-        background: PANEL_STYLES[type],
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        gap: "12px",
-        overflow: "hidden",
-      }}
-    >
-      {/* glow */}
-      <div style={{ position: "absolute", inset: 0, background: PANEL_GLOW[type] }} />
-      {/* speed lines */}
-      <div
-        style={{
-          position: "absolute", inset: 0,
-          background: "repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(192,57,43,0.03) 0.5deg, transparent 1deg)",
-          pointerEvents: "none",
-        }}
-      />
-      <div style={{ position: "relative", zIndex: 1, fontSize: "48px", opacity: 0.2 }}>{icon}</div>
-      <div
-        style={{
-          position: "relative", zIndex: 1,
-          fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)",
-          fontSize: "11px", opacity: 0.4, letterSpacing: "4px", textTransform: "uppercase",
-          color: "var(--light, #f0eff8)",
-        }}
-      >
-        {label}
+    <div style={{
+      width: "100%", minHeight: "420px",
+      background: "#f0f0f0",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexDirection: "column", gap: "12px",
+    }}>
+      <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#ddd", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="18" height="18" rx="2" stroke="#bbb" strokeWidth="1.5"/>
+          <circle cx="8.5" cy="8.5" r="1.5" fill="#bbb"/>
+          <path d="M3 16l5-5 4 4 3-3 6 6" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
       </div>
+      <span style={{ fontSize: "12px", color: "#bbb", letterSpacing: "1px" }}>{label}</span>
     </div>
   );
 }
@@ -112,10 +63,10 @@ export default function LecteurPage({ params }: { params: Promise<{ chapitre: st
 
   if (!ep) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--void, #06060a)" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "24px", color: "var(--blood, #c0392b)", marginBottom: "16px" }}>Épisode introuvable</p>
-          <Link href="/" style={{ color: "var(--ash, #8b8b9a)", fontSize: "13px" }}>← Retour à l'accueil</Link>
+          <p style={{ fontSize: "20px", color: "#c0392b", marginBottom: "16px" }}>Épisode introuvable</p>
+          <Link href="/" style={{ color: "#888", fontSize: "13px" }}>← Retour à l'accueil</Link>
         </div>
       </div>
     );
@@ -124,104 +75,201 @@ export default function LecteurPage({ params }: { params: Promise<{ chapitre: st
   return (
     <>
       <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         .reader-header {
           position: fixed; top: 0; left: 0; right: 0; z-index: 90;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 8px 14px;
-          background: rgba(0,0,0,0.92);
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(192,57,43,0.2);
-          gap: 8px;
-          height: 52px;
+          display: flex; align-items: center;
+          padding: 0 20px; height: 50px;
+          background: #fff;
+          border-bottom: 1px solid #e8e8e8;
+          gap: 16px;
         }
-        .reader-back {
-          background: none; border: none; color: var(--ash);
-          font-family: var(--font-rajdhani, 'Rajdhani', sans-serif);
-          font-size: 13px; font-weight: 600; letter-spacing: 1.5px;
-          cursor: pointer; display: flex; align-items: center; gap: 6px;
-          text-transform: uppercase; transition: color 0.2s;
-          text-decoration: none;
+        .reader-back-link {
+          display: flex; align-items: center; gap: 6px;
+          font-size: 13px; color: #555; text-decoration: none;
+          font-family: var(--font-rajdhani, sans-serif); font-weight: 600;
+          letter-spacing: 0.5px; transition: color 0.2s;
+          white-space: nowrap;
         }
-        .reader-back:hover { color: var(--light); }
-        .reader-ep-title {
+        .reader-back-link:hover { color: #111; }
+        .reader-back-link svg { flex-shrink: 0; }
+        .reader-sep { color: #ddd; font-size: 16px; }
+        .reader-ep-label {
+          font-size: 13px; font-weight: 600; color: #222;
+          font-family: var(--font-rajdhani, sans-serif);
+          letter-spacing: 0.5px;
+        }
+        .reader-nav-btns { margin-left: auto; display: flex; gap: 8px; }
+        .reader-nav-btn {
+          font-size: 12px; font-weight: 700; letter-spacing: 1px;
+          padding: 6px 14px; border: 1px solid #e0e0e0;
+          background: #fff; color: #555; cursor: pointer;
+          text-decoration: none; display: inline-flex; align-items: center;
+          gap: 4px; border-radius: 4px; transition: all 0.2s;
+          font-family: var(--font-rajdhani, sans-serif);
+        }
+        .reader-nav-btn:hover { border-color: #c0392b; color: #c0392b; }
+        .reader-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+        .reader-content {
+          padding-top: 50px;
+          background: #fff;
+          min-height: 100vh;
+        }
+        .panels-wrap {
+          max-width: 720px;
+          margin: 0 auto;
+          background: #fff;
+        }
+        .panel-item {
+          width: 100%;
+          display: block;
+          line-height: 0;
+        }
+        .panel-item img {
+          width: 100%; display: block;
+        }
+
+        /* Fin d'épisode */
+        .ep-end {
+          padding: 60px 24px 80px;
+          text-align: center;
+          background: #fff;
+          border-top: 1px solid #f0f0f0;
+        }
+        .ep-end-line {
+          display: flex; align-items: center; gap: 16px;
+          margin-bottom: 32px; justify-content: center;
+        }
+        .ep-end-hr { flex: 1; max-width: 80px; height: 1px; background: #e0e0e0; }
+        .ep-end-text {
+          font-size: 12px; letter-spacing: 3px; color: #aaa;
+          text-transform: uppercase;
+          font-family: var(--font-rajdhani, sans-serif); font-weight: 600;
+        }
+        .ep-end-title {
           font-family: var(--font-bebas, 'Bebas Neue', sans-serif);
-          font-size: 15px; letter-spacing: 2px; color: var(--light);
-          flex: 1; text-align: center;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          font-size: 28px; letter-spacing: 4px; color: #222;
+          margin-bottom: 8px;
         }
-        .reader-nav { display: flex; gap: 8px; }
-        .reader-nav a {
-          border: 1px solid rgba(192,57,43,0.3); color: var(--ash);
-          font-family: var(--font-rajdhani, 'Rajdhani', sans-serif);
-          font-size: 11px; font-weight: 700; letter-spacing: 1px;
-          padding: 5px 12px; cursor: pointer; text-transform: uppercase;
-          transition: all 0.2s; text-decoration: none; display: inline-block;
-          background: none;
+        .ep-end-sub { font-size: 13px; color: #aaa; margin-bottom: 32px; }
+        .btn-next {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 14px 32px;
+          background: #c0392b; color: white; border: none;
+          font-family: var(--font-rajdhani, sans-serif);
+          font-size: 14px; font-weight: 700; letter-spacing: 2px;
+          text-transform: uppercase; cursor: pointer;
+          text-decoration: none; border-radius: 4px;
+          transition: all 0.3s; box-shadow: 0 4px 16px rgba(192,57,43,0.25);
         }
-        .reader-nav a:hover { border-color: var(--blood); color: var(--light); }
-        .reader-nav a.disabled { opacity: 0.3; pointer-events: none; }
-        .episode-end {
-          width: 100%; padding: 48px 24px; text-align: center;
-          background: linear-gradient(to bottom, #000, #0a0608);
-          border-top: 1px solid rgba(192,57,43,0.2);
+        .btn-next:hover { background: #e74c3c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(192,57,43,0.35); }
+        .btn-back-home {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 14px 28px;
+          background: transparent; color: #555;
+          border: 1px solid #e0e0e0;
+          font-family: var(--font-rajdhani, sans-serif);
+          font-size: 14px; font-weight: 600; letter-spacing: 1.5px;
+          text-transform: uppercase; cursor: pointer;
+          text-decoration: none; border-radius: 4px;
+          transition: all 0.3s;
         }
-        .episode-end-title {
-          font-family: var(--font-bebas, 'Bebas Neue', sans-serif);
-          font-size: 28px; letter-spacing: 4px; color: var(--ash); margin-bottom: 20px;
+        .btn-back-home:hover { border-color: #c0392b; color: #c0392b; }
+
+        /* Progress bar */
+        .read-progress {
+          position: fixed; top: 50px; left: 0; right: 0; height: 3px;
+          background: #f0f0f0; z-index: 89;
         }
-        .btn-primary {
-          font-family: var(--font-rajdhani, 'Rajdhani', sans-serif);
-          font-size: 14px; font-weight: 700; letter-spacing: 2.5px;
-          text-transform: uppercase; padding: 12px 28px;
-          background: var(--blood); color: white; border: none;
-          cursor: pointer; transition: all 0.3s;
-          clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-          text-decoration: none; display: inline-block;
+        .read-progress-fill {
+          height: 100%; background: #c0392b;
+          transition: width 0.1s linear;
         }
-        .btn-primary:hover { background: var(--fire); transform: translateY(-2px); }
-        .btn-secondary {
-          font-family: var(--font-rajdhani, 'Rajdhani', sans-serif);
-          font-size: 14px; font-weight: 600; letter-spacing: 2px;
-          text-transform: uppercase; padding: 12px 24px;
-          background: transparent; color: var(--silver);
-          border: 1px solid rgba(200,200,216,0.25);
-          cursor: pointer; transition: all 0.3s;
-          clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-          text-decoration: none; display: inline-block;
+
+        @media (max-width: 600px) {
+          .reader-ep-label { display: none; }
+          .reader-sep { display: none; }
         }
-        .btn-secondary:hover { border-color: var(--blood); color: var(--light); }
       `}</style>
 
-      <div style={{ background: "#000", minHeight: "100vh" }}>
+      <div className="reader-content">
         {/* Header */}
         <div className="reader-header">
-          <Link className="reader-back" href="/">← Retour</Link>
-          <div className="reader-ep-title">Ép. {epNum} — {ep.title}</div>
-          <div className="reader-nav">
-            <Link href={`/lire/${epNum - 1}`} className={epNum <= 1 ? "disabled" : ""}>◀ Préc.</Link>
-            <Link href={`/lire/${epNum + 1}`} className={epNum >= total ? "disabled" : ""}>Suiv. ▶</Link>
+          <Link className="reader-back-link" href={`/manga/primo-burst`}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Liste des épisodes
+          </Link>
+          <span className="reader-sep">|</span>
+          <span className="reader-ep-label">Épisode {epNum} — {ep.title}</span>
+          <div className="reader-nav-btns">
+            <Link href={`/lire/${epNum - 1}`} className={`reader-nav-btn ${epNum <= 1 ? "disabled" : ""}`}>
+              ◀ Préc.
+            </Link>
+            <Link href={`/lire/${epNum + 1}`} className={`reader-nav-btn ${epNum >= total ? "disabled" : ""}`}>
+              Suiv. ▶
+            </Link>
           </div>
         </div>
 
-        {/* Planches */}
-        <div style={{ paddingTop: "52px", display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "720px", margin: "0 auto", width: "100%" }}>
+        {/* Barre de progression */}
+        <ProgressBar />
+
+        {/* Panels */}
+        <div className="panels-wrap">
           {ep.panels.map((panel, i) => (
-            <div key={i} style={{ width: "100%" }}>
-              <PanelPlaceholder icon={panel.icon} label={panel.label} type={panel.type} src={panel.src} />
+            <div key={i} className="panel-item">
+              {panel.src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={panel.src} alt={panel.label} />
+              ) : (
+                <PlaceholderPanel label={panel.label} />
+              )}
             </div>
           ))}
 
           {/* Fin d'épisode */}
-          <div className="episode-end">
-            <div className="episode-end-title">— Fin de l'épisode {epNum} —</div>
+          <div className="ep-end">
+            <div className="ep-end-line">
+              <div className="ep-end-hr" />
+              <div className="ep-end-text">Fin de l'épisode</div>
+              <div className="ep-end-hr" />
+            </div>
+            <div className="ep-end-title">Épisode {epNum} · {ep.title}</div>
+            <div className="ep-end-sub">Merci d'avoir lu PRIMO BURST</div>
             {epNum < total ? (
-              <Link className="btn-primary" href={`/lire/${epNum + 1}`}>Épisode suivant ▶</Link>
+              <Link className="btn-next" href={`/lire/${epNum + 1}`}>
+                Épisode suivant ▶
+              </Link>
             ) : (
-              <Link className="btn-secondary" href="/">← Retour à l'accueil</Link>
+              <Link className="btn-back-home" href="/manga/primo-burst">
+                ← Retour à la liste
+              </Link>
             )}
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+function ProgressBar() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const onScroll = () => {
+      const scrolled = window.scrollY;
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(total > 0 ? (scrolled / total) * 100 : 0);
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <div className="read-progress">
+      <div className="read-progress-fill" style={{ width: `${progress}%` }} />
+    </div>
   );
 }
