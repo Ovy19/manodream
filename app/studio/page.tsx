@@ -36,6 +36,18 @@ interface Bubble {
   bgColor: string;
 }
 
+// SFX = onomatopée style webtoon (BAM, BOUM, TCHAC...)
+interface SFX {
+  id: string;
+  text: string;
+  x: number; y: number;
+  fontSize: number;
+  color1: string;   // couleur principale (ex: orange)
+  color2: string;   // couleur secondaire dégradé (ex: rouge)
+  strokeColor: string; // contour (ex: blanc ou noir)
+  rotation: number; // degrés
+}
+
 type Block =
   | { type: "panel"; data: WebtoonPanel }
   | { type: "respiration"; data: Respiration };
@@ -68,6 +80,15 @@ const RESP_COLORS = [
   { label: "Rouge", color: "#c0392b" },
   { label: "Bleu nuit", color: "#0a0f1f" },
   { label: "Gris", color: "#888888" },
+];
+
+const SFX_PRESETS = [
+  { label: "BAM", color1: "#ff8c00", color2: "#ff2200", stroke: "#ffffff" },
+  { label: "BOUM", color1: "#ffcc00", color2: "#ff6600", stroke: "#000000" },
+  { label: "TCHAC", color1: "#ff4400", color2: "#aa0000", stroke: "#ffffff" },
+  { label: "WHOOSH", color1: "#0088ff", color2: "#004499", stroke: "#ffffff" },
+  { label: "CRASH", color1: "#ffffff", color2: "#aaaaaa", stroke: "#000000" },
+  { label: "ZAP", color1: "#ffff00", color2: "#ff8800", stroke: "#222222" },
 ];
 
 const BUBBLE_SHAPES: { shape: BubbleShape; label: string; icon: string }[] = [
@@ -334,6 +355,14 @@ export default function StudioPage() {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [selectedBubble, setSelectedBubble] = useState<string | null>(null);
   const [editingBubble, setEditingBubble] = useState<string | null>(null);
+  const [sfxList, setSfxList] = useState<SFX[]>([]);
+  const [selectedSfx, setSelectedSfx] = useState<string | null>(null);
+  const [sfxText, setSfxText] = useState("BAM");
+  const [sfxSize, setSfxSize] = useState(80);
+  const [sfxColor1, setSfxColor1] = useState("#ff8c00");
+  const [sfxColor2, setSfxColor2] = useState("#ff2200");
+  const [sfxStroke, setSfxStroke] = useState("#ffffff");
+  const [sfxRotation, setSfxRotation] = useState(-15);
 
   // Panel controls
   const [panelHeight, setPanelHeight] = useState(320);
@@ -482,19 +511,38 @@ export default function StudioPage() {
     if (selectedBubble === id) setSelectedBubble(null);
   };
 
-  // Raccourci clavier Delete/Backspace pour supprimer bulle sélectionnée
+  // SFX
+  const addSfx = () => {
+    const s: SFX = {
+      id: uid(), text: sfxText.toUpperCase(),
+      x: 100, y: 80,
+      fontSize: sfxSize,
+      color1: sfxColor1, color2: sfxColor2,
+      strokeColor: sfxStroke,
+      rotation: sfxRotation,
+    };
+    setSfxList((prev) => [...prev, s]);
+    setSelectedSfx(s.id);
+  };
+
+  const deleteSfx = (id: string) => {
+    setSfxList((s) => s.filter((x) => x.id !== id));
+    if (selectedSfx === id) setSelectedSfx(null);
+  };
+
+  // Raccourci clavier Delete/Backspace pour supprimer bulle ou SFX sélectionné
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedBubble) {
-        // Ne pas supprimer si on est en train d'éditer du texte
-        const tag = (e.target as HTMLElement).tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA") return;
-        deleteBubble(selectedBubble);
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedBubble) deleteBubble(selectedBubble);
+        if (selectedSfx) deleteSfx(selectedSfx);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedBubble]);
+  }, [selectedBubble, selectedSfx]);
 
   // ── RENDER ──
   return (
@@ -634,6 +682,70 @@ export default function StudioPage() {
                 🗑 Supprimer cette bulle
               </button>
               <div style={{ fontSize: "8px", color: "#aaa", textAlign: "center", marginTop: "4px" }}>ou appuie sur ⌫ Delete</div>
+            </div>
+          )}
+        </div>
+
+        {/* ── SECTION SFX ── */}
+        <div>
+          <div style={L}>💥 Effets sonores (SFX)</div>
+
+          {/* Presets rapides */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "10px" }}>
+            {SFX_PRESETS.map((p) => (
+              <button key={p.label} onClick={() => {
+                setSfxText(p.label);
+                setSfxColor1(p.color1);
+                setSfxColor2(p.color2);
+                setSfxStroke(p.stroke);
+              }} style={{
+                padding: "4px 8px", fontSize: "9px", fontWeight: 700,
+                background: `linear-gradient(135deg, ${p.color1}, ${p.color2})`,
+                color: p.stroke === "#ffffff" ? "#fff" : "#000",
+                border: "none", cursor: "pointer", borderRadius: "3px",
+                letterSpacing: "1px", textShadow: `0 0 3px ${p.stroke}`,
+              }}>{p.label}</button>
+            ))}
+          </div>
+
+          {/* Texte personnalisé */}
+          <input value={sfxText} onChange={(e) => setSfxText(e.target.value.toUpperCase())}
+            placeholder="BAM, BOUM, TCHAC..." style={{ ...inputS, marginBottom: "6px", fontFamily: "var(--font-bangers, 'Bangers', sans-serif)", fontSize: "16px", letterSpacing: "2px" }} />
+
+          {/* Taille */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "6px", alignItems: "center" }}>
+            <span style={{ fontSize: "9px", color: "#888" }}>Taille</span>
+            <input type="range" min="30" max="160" value={sfxSize} onChange={(e) => setSfxSize(Number(e.target.value))} style={{ flex: 1, accentColor: "#c0392b" }} />
+            <span style={{ fontSize: "10px", color: "#888", width: "28px" }}>{sfxSize}px</span>
+          </div>
+
+          {/* Rotation */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "8px", alignItems: "center" }}>
+            <span style={{ fontSize: "9px", color: "#888" }}>Rotation</span>
+            <input type="range" min="-45" max="45" value={sfxRotation} onChange={(e) => setSfxRotation(Number(e.target.value))} style={{ flex: 1, accentColor: "#c0392b" }} />
+            <span style={{ fontSize: "10px", color: "#888", width: "28px" }}>{sfxRotation}°</span>
+          </div>
+
+          {/* Couleurs */}
+          <div style={{ display: "flex", gap: "8px", marginBottom: "8px", alignItems: "center" }}>
+            <div><div style={{ fontSize: "8px", color: "#888", marginBottom: "2px" }}>Couleur 1</div>
+              <input type="color" value={sfxColor1} onChange={(e) => setSfxColor1(e.target.value)} style={{ width: "34px", height: "26px", border: "1px solid #ccc", cursor: "pointer", padding: 0 }} /></div>
+            <div><div style={{ fontSize: "8px", color: "#888", marginBottom: "2px" }}>Couleur 2</div>
+              <input type="color" value={sfxColor2} onChange={(e) => setSfxColor2(e.target.value)} style={{ width: "34px", height: "26px", border: "1px solid #ccc", cursor: "pointer", padding: 0 }} /></div>
+            <div><div style={{ fontSize: "8px", color: "#888", marginBottom: "2px" }}>Contour</div>
+              <input type="color" value={sfxStroke} onChange={(e) => setSfxStroke(e.target.value)} style={{ width: "34px", height: "26px", border: "1px solid #ccc", cursor: "pointer", padding: 0 }} /></div>
+          </div>
+
+          <button onClick={addSfx} style={{ ...btnBlue, background: "linear-gradient(135deg, #ff8c00, #ff2200)" }}>
+            💥 Ajouter SFX
+          </button>
+
+          {selectedSfx && (
+            <div style={{ marginTop: "8px", padding: "8px", background: "rgba(255,100,0,0.06)", border: "1px solid rgba(255,100,0,0.2)", borderRadius: "6px" }}>
+              <div style={{ fontSize: "9px", color: "#ff6600", letterSpacing: "1px", marginBottom: "5px", fontWeight: 700 }}>SFX SÉLECTIONNÉ</div>
+              <button onClick={() => deleteSfx(selectedSfx)} style={{ width: "100%", padding: "7px", background: "#c0392b", border: "none", color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px" }}>
+                🗑 Supprimer ce SFX
+              </button>
             </div>
           )}
         </div>
@@ -782,13 +894,25 @@ export default function StudioPage() {
                 key={bubble.id} bubble={bubble}
                 selected={selectedBubble === bubble.id}
                 editing={editingBubble === bubble.id}
-                onSelect={() => setSelectedBubble(bubble.id === selectedBubble ? null : bubble.id)}
+                onSelect={() => { setSelectedBubble(bubble.id === selectedBubble ? null : bubble.id); setSelectedSfx(null); }}
                 onDrag={(dx, dy) => setBubbles((prev) => prev.map((b) => b.id === bubble.id ? { ...b, x: b.x + dx, y: b.y + dy } : b))}
                 onEdit={() => setEditingBubble(bubble.id)}
                 onTextChange={(t) => setBubbles((prev) => prev.map((b) => b.id === bubble.id ? { ...b, text: t } : b))}
                 onStopEdit={() => setEditingBubble(null)}
                 onDelete={() => { deleteBubble(bubble.id); setSelectedBubble(null); }}
                 onResize={(dw, dh) => setBubbles((prev) => prev.map((b) => b.id === bubble.id ? { ...b, width: Math.max(80, b.width + dw), height: Math.max(60, b.height + dh) } : b))}
+              />
+            ))}
+
+            {/* SFX flottants */}
+            {sfxList.map((sfx) => (
+              <SfxEl
+                key={sfx.id} sfx={sfx}
+                selected={selectedSfx === sfx.id}
+                onSelect={() => { setSelectedSfx(sfx.id === selectedSfx ? null : sfx.id); setSelectedBubble(null); }}
+                onDrag={(dx, dy) => setSfxList((prev) => prev.map((s) => s.id === sfx.id ? { ...s, x: s.x + dx, y: s.y + dy } : s))}
+                onDelete={() => deleteSfx(sfx.id)}
+                onRotate={(dr) => setSfxList((prev) => prev.map((s) => s.id === sfx.id ? { ...s, rotation: s.rotation + dr } : s))}
               />
             ))}
           </div>
@@ -865,6 +989,104 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
             title="Redimensionner">
             ↔
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SFX DRAGGABLE ──
+function SfxEl({ sfx, selected, onSelect, onDrag, onDelete, onRotate }: {
+  sfx: SFX; selected: boolean;
+  onSelect: () => void;
+  onDrag: (dx: number, dy: number) => void;
+  onDelete: () => void;
+  onRotate: (dr: number) => void;
+}) {
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const gradId = `sfx-grad-${sfx.id}`;
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    onSelect();
+    const move = (ev: MouseEvent) => {
+      if (!dragStart.current) return;
+      onDrag(ev.clientX - dragStart.current.x, ev.clientY - dragStart.current.y);
+      dragStart.current = { x: ev.clientX, y: ev.clientY };
+    };
+    const up = () => { dragStart.current = null; window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
+
+  return (
+    <div
+      onMouseDown={handleMouseDown}
+      style={{
+        position: "absolute",
+        left: sfx.x, top: sfx.y,
+        transform: `rotate(${sfx.rotation}deg)`,
+        transformOrigin: "center center",
+        cursor: "move", userSelect: "none",
+        zIndex: 20,
+        outline: selected ? "2px dashed rgba(255,140,0,0.6)" : "none",
+        outlineOffset: "4px",
+        borderRadius: "4px",
+      }}
+    >
+      {/* Le texte SVG avec dégradé + contour */}
+      <svg
+        style={{ display: "block", overflow: "visible" }}
+        viewBox={`0 0 ${sfx.text.length * sfx.fontSize * 0.65} ${sfx.fontSize * 1.3}`}
+        width={sfx.text.length * sfx.fontSize * 0.65}
+        height={sfx.fontSize * 1.3}
+      >
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={sfx.color1} />
+            <stop offset="100%" stopColor={sfx.color2} />
+          </linearGradient>
+        </defs>
+        {/* Contour (stroke) */}
+        <text
+          x="50%" y="85%"
+          textAnchor="middle"
+          fontFamily="var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)"
+          fontSize={sfx.fontSize}
+          fontWeight="bold"
+          fill="none"
+          stroke={sfx.strokeColor}
+          strokeWidth={sfx.fontSize * 0.12}
+          strokeLinejoin="round"
+          letterSpacing="2"
+        >{sfx.text}</text>
+        {/* Remplissage dégradé */}
+        <text
+          x="50%" y="85%"
+          textAnchor="middle"
+          fontFamily="var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)"
+          fontSize={sfx.fontSize}
+          fontWeight="bold"
+          fill={`url(#${gradId})`}
+          letterSpacing="2"
+        >{sfx.text}</text>
+      </svg>
+
+      {/* Barre d'actions */}
+      {selected && (
+        <div style={{
+          position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%) rotate(0deg)",
+          display: "flex", gap: "4px", marginBottom: "8px",
+          background: "#1a1a2e", borderRadius: "6px", padding: "4px 6px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)", zIndex: 30, whiteSpace: "nowrap",
+        }}>
+          <button onClick={(e) => { e.stopPropagation(); onRotate(-5); }}
+            style={{ padding: "4px 8px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: "12px", cursor: "pointer", borderRadius: "3px" }}>↺</button>
+          <button onClick={(e) => { e.stopPropagation(); onRotate(5); }}
+            style={{ padding: "4px 8px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: "12px", cursor: "pointer", borderRadius: "3px" }}>↻</button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            style={{ padding: "4px 10px", background: "#c0392b", border: "none", color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "3px" }}>🗑 Suppr.</button>
         </div>
       )}
     </div>
