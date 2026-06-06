@@ -477,7 +477,24 @@ export default function StudioPage() {
     setSelectedBubble(b.id);
   };
 
-  const deleteBubble = (id: string) => setBubbles((b) => b.filter((bu) => bu.id !== id));
+  const deleteBubble = (id: string) => {
+    setBubbles((b) => b.filter((bu) => bu.id !== id));
+    if (selectedBubble === id) setSelectedBubble(null);
+  };
+
+  // Raccourci clavier Delete/Backspace pour supprimer bulle sélectionnée
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedBubble) {
+        // Ne pas supprimer si on est en train d'éditer du texte
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        deleteBubble(selectedBubble);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedBubble]);
 
   // ── RENDER ──
   return (
@@ -604,6 +621,21 @@ export default function StudioPage() {
               <input type="color" value={bubbleColor} onChange={(e) => setBubbleColor(e.target.value)} style={{ width: "34px", height: "26px", border: "1px solid #ccc", cursor: "pointer", padding: 0 }} /></div>
           </div>
           <button onClick={addBubble} style={btnBlue}>+ Ajouter bulle</button>
+
+          {/* Supprimer bulle sélectionnée */}
+          {selectedBubble && (
+            <div style={{ marginTop: "10px", padding: "10px", background: "rgba(192,57,43,0.06)", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "6px" }}>
+              <div style={{ fontSize: "9px", color: "#c0392b", letterSpacing: "1px", marginBottom: "6px", fontWeight: 700 }}>BULLE SÉLECTIONNÉE</div>
+              <button onClick={() => { deleteBubble(selectedBubble); setSelectedBubble(null); }} style={{
+                width: "100%", padding: "9px", background: "#c0392b", border: "none",
+                color: "white", fontSize: "11px", fontWeight: 700, letterSpacing: "1px",
+                cursor: "pointer", borderRadius: "4px", textTransform: "uppercase",
+              }}>
+                🗑 Supprimer cette bulle
+              </button>
+              <div style={{ fontSize: "8px", color: "#aaa", textAlign: "center", marginTop: "4px" }}>ou appuie sur ⌫ Delete</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -800,20 +832,40 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
 
   return (
     <div onMouseDown={handleMouseDown} onDoubleClick={(e) => { e.stopPropagation(); onEdit(); }}
-      style={{ position: "absolute", left: bubble.x, top: bubble.y, width: bubble.width, height: bubble.height, cursor: "move", userSelect: "none", outline: selected ? "2px dashed #c0392b" : "none", zIndex: 10 }}>
+      style={{ position: "absolute", left: bubble.x, top: bubble.y, width: bubble.width, height: bubble.height, cursor: "move", userSelect: "none", outline: selected ? "2px dashed #c0392b" : "none", zIndex: 10, overflow: "visible" }}>
+
       {editing ? (
         <textarea autoFocus value={bubble.text} onChange={(e) => onTextChange(e.target.value)} onBlur={onStopEdit}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.8)", color: "white", border: "none", fontSize: `${bubble.fontSize}px`, textAlign: "center", padding: "8px", resize: "none", zIndex: 20 }} />
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.85)", color: "white", border: "none", fontSize: `${bubble.fontSize}px`, textAlign: "center", padding: "8px", resize: "none", zIndex: 20, borderRadius: "4px" }} />
       ) : (
         <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} />
       )}
-      {selected && (
-        <>
+
+      {/* Barre d'actions flottante au-dessus de la bulle */}
+      {selected && !editing && (
+        <div style={{
+          position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)",
+          display: "flex", gap: "4px", marginBottom: "6px",
+          background: "#1a1a2e", borderRadius: "6px", padding: "4px 6px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          zIndex: 30, whiteSpace: "nowrap",
+        }}>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            style={{ padding: "4px 8px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: "10px", cursor: "pointer", borderRadius: "3px", fontWeight: 600 }}
+            title="Double-clic pour éditer">
+            ✏️
+          </button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            style={{ position: "absolute", top: -10, right: -10, width: "20px", height: "20px", background: "#c0392b", border: "none", color: "white", cursor: "pointer", fontSize: "11px", borderRadius: "50%", zIndex: 20 }}>×</button>
-          <div onMouseDown={handleResizeDown}
-            style={{ position: "absolute", bottom: -4, right: -4, width: "12px", height: "12px", background: "#c0392b", cursor: "se-resize", zIndex: 20 }} />
-        </>
+            style={{ padding: "4px 10px", background: "#c0392b", border: "none", color: "white", fontSize: "11px", fontWeight: 700, cursor: "pointer", borderRadius: "3px", letterSpacing: "0.5px" }}>
+            🗑 Suppr.
+          </button>
+          {/* Poignée de resize */}
+          <div onMouseDown={(e) => { e.stopPropagation(); handleResizeDown(e); }}
+            style={{ padding: "4px 8px", background: "rgba(255,255,255,0.1)", color: "#aaa", fontSize: "11px", cursor: "se-resize", borderRadius: "3px", display: "flex", alignItems: "center" }}
+            title="Redimensionner">
+            ↔
+          </div>
+        </div>
       )}
     </div>
   );
