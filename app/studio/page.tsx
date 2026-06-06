@@ -210,90 +210,129 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleSha
       text={text} fontSize={fontSize + 4} align="center" bold={true} mangaFont={dialogFont} />
   );
 
-  // 💬 RONDE — ellipse organique avec filtre main levée + ombre
+  // 💬 RONDE — style Solo Leveling : ellipse propre, queue fine et sharp
   if (shape === "round") return (
-    <svg viewBox="0 0 200 125" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
-      {/* Ombre */}
-      <ellipse cx="102" cy="58" rx="95" ry="45" fill="rgba(0,0,0,0.15)" filter={`url(#${sid})`}/>
-      {/* Corps avec filtre wobbly */}
+      {/* Ombre portée */}
+      <ellipse cx="103" cy="57" rx="94" ry="43" fill="rgba(0,0,0,0.18)" filter={`url(#${sid})`}/>
+      {/* Corps bulle */}
       <g filter={`url(#${fid})`}>
-        <ellipse cx="100" cy="55" rx="95" ry="44" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
-        <polygon points="55,92 72,98 62,116" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+        <ellipse cx="100" cy="54" rx="94" ry="43" fill={bgColor} stroke={stroke} strokeWidth="2.5"/>
+        {/* Queue fine et sharp style Solo Leveling — pointe vers le bas gauche */}
+        <path d="M 68,93 L 52,128 L 82,97 Z" fill={bgColor} stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
       </g>
-      <text x="100" y="58" textAnchor="middle" dominantBaseline="middle"
-        fontSize={fontSize} fill={stroke}
-        fontFamily={dialogFont} fontWeight="800"
-        style={{ letterSpacing: "0.3px" }}>{text}</text>
+      {/* Texte — Nunito bold, légèrement fondu */}
+      <foreignObject x="12" y="10" width="176" height="84">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{
+          width: "100%", height: "100%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 800,
+          color: "#111", textAlign: "center", lineHeight: 1.25,
+          letterSpacing: "0.2px",
+          textRendering: "optimizeLegibility",
+        }}>{text}</div>
+      </foreignObject>
     </svg>
   );
 
-  // 🗨️ RECTANGLE — rect organique
+  // 🗨️ RECTANGLE — queue sharp Solo Leveling
   if (shape === "rect") return (
-    <svg viewBox="0 0 200 125" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
       <g filter={`url(#${sid})`}>
-        <rect x="4" y="4" width="192" height="88" rx="6" fill="rgba(0,0,0,0.12)"/>
+        <rect x="4" y="4" width="192" height="86" rx="5" fill="rgba(0,0,0,0.16)"/>
       </g>
       <g filter={`url(#${fid})`}>
-        <rect x="3" y="3" width="192" height="87" rx="6" fill={bgColor} stroke={stroke} strokeWidth="2.5"/>
-        <polygon points="65,90 85,96 75,116" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+        <rect x="3" y="3" width="192" height="85" rx="5" fill={bgColor} stroke={stroke} strokeWidth="2.5"/>
+        {/* Queue fine pointue vers le bas */}
+        <path d="M 72,88 L 58,128 L 88,90 Z" fill={bgColor} stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
       </g>
-      <text x="100" y="50" textAnchor="middle" dominantBaseline="middle"
-        fontSize={fontSize} fill={stroke}
-        fontFamily={dialogFont} fontWeight="800">{text}</text>
+      <foreignObject x="12" y="8" width="176" height="74">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{
+          width: "100%", height: "100%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 800,
+          color: "#111", textAlign: "center", lineHeight: 1.25,
+          letterSpacing: "0.2px",
+        }}>{text}</div>
+      </foreignObject>
     </svg>
   );
 
-  // 💥 EXPLOSION — starburst irrégulier avec pointes variées
+  // 💥 EXPLOSION — starburst avec pointes irrégulières
   if (shape === "explosion") return (
     <svg viewBox="0 0 200 145" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
       <g filter={`url(#${sid})`}>
-        <polygon points="100,3 118,38 158,14 144,52 196,52 162,80 186,118 140,104 132,140 100,108 68,140 60,104 14,118 38,80 4,52 56,52 42,14 82,38" fill="rgba(0,0,0,0.15)"/>
+        <polygon points="100,3 122,35 162,12 148,50 198,50 164,78 190,118 142,102 134,142 100,106 66,142 58,102 10,118 36,78 2,50 52,50 38,12 78,35" fill="rgba(0,0,0,0.15)"/>
       </g>
       <g filter={`url(#${fid})`}>
-        <polygon points="100,3 118,38 158,14 144,52 196,52 162,80 186,118 140,104 132,140 100,108 68,140 60,104 14,118 38,80 4,52 56,52 42,14 82,38"
+        <polygon points="100,3 122,35 162,12 148,50 198,50 164,78 190,118 142,102 134,142 100,106 66,142 58,102 10,118 36,78 2,50 52,50 38,12 78,35"
           fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
       </g>
-      <text x="100" y="76" textAnchor="middle" dominantBaseline="middle"
-        fontSize={fontSize} fill={stroke}
-        fontFamily={mangaFont} fontWeight="bold">{text}</text>
+      <foreignObject x="28" y="32" width="144" height="82">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{
+          width: "100%", height: "100%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: mangaFont, fontSize: `${fontSize}px`, fontWeight: 900,
+          color: "#111", textAlign: "center", lineHeight: 1.2,
+          letterSpacing: "1px",
+        }}>{text}</div>
+      </foreignObject>
     </svg>
   );
 
-  // 💭 PENSÉE
+  // 💭 PENSÉE — pointillés, queue en bulles
   if (shape === "thought") return (
-    <svg viewBox="0 0 200 135" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+    <svg viewBox="0 0 200 138" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
       <g filter={`url(#${fid})`}>
-        <ellipse cx="100" cy="54" rx="90" ry="42" fill={bgColor} stroke={stroke} strokeWidth="2" strokeDasharray="6,2"/>
-        <circle cx="72" cy="103" r="11" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="57" cy="118" r="7" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="45" cy="129" r="5" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <ellipse cx="100" cy="54" rx="90" ry="42" fill={bgColor} stroke={stroke} strokeWidth="2" strokeDasharray="5,3"/>
+        <circle cx="72" cy="104" r="10" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="57" cy="119" r="6" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="46" cy="130" r="4" fill={bgColor} stroke={stroke} strokeWidth="2"/>
       </g>
-      <text x="100" y="57" textAnchor="middle" dominantBaseline="middle"
-        fontSize={fontSize} fill={stroke}
-        fontFamily={dialogFont} fontStyle="italic" fontWeight="600">{text}</text>
+      <foreignObject x="14" y="14" width="172" height="78">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{
+          width: "100%", height: "100%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 600,
+          color: "#333", textAlign: "center", lineHeight: 1.3,
+          fontStyle: "italic",
+        }}>{text}</div>
+      </foreignObject>
     </svg>
   );
 
-  // 📢 CRI — rectangle agité
+  // 📢 CRI
   return (
-    <svg viewBox="0 0 200 125" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+    <svg viewBox="0 0 200 128" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
       <g filter={`url(#${sid})`}>
         <rect x="5" y="5" width="190" height="82" rx="1" fill="rgba(0,0,0,0.15)"/>
       </g>
       <g filter={`url(#${fid})`}>
         <rect x="3" y="3" width="190" height="80" rx="1" fill={bgColor} stroke={stroke} strokeWidth="3.5"/>
-        <line x1="3" y1="3" x2="193" y2="83" stroke={stroke} strokeWidth="1" opacity="0.15"/>
-        <line x1="193" y1="3" x2="3" y2="83" stroke={stroke} strokeWidth="1" opacity="0.15"/>
-        <polygon points="82,83 102,83 92,112" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+        <line x1="3" y1="3" x2="193" y2="83" stroke={stroke} strokeWidth="1" opacity="0.12"/>
+        <line x1="193" y1="3" x2="3" y2="83" stroke={stroke} strokeWidth="1" opacity="0.12"/>
+        {/* Queue sharp vers le bas */}
+        <path d="M 82,83 L 70,120 L 100,85 Z" fill={bgColor} stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
       </g>
-      <text x="100" y="46" textAnchor="middle" dominantBaseline="middle"
-        fontSize={fontSize + 2} fill={stroke}
-        fontFamily={mangaFont} fontWeight="bold" letterSpacing="2">{text}</text>
+      <foreignObject x="10" y="8" width="180" height="68">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{
+          width: "100%", height: "100%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontFamily: mangaFont, fontSize: `${fontSize + 2}px`, fontWeight: 900,
+          color: "#111", textAlign: "center", lineHeight: 1.2,
+          letterSpacing: "2px", textTransform: "uppercase",
+        }}>{text}</div>
+      </foreignObject>
     </svg>
   );
 }
