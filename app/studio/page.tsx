@@ -323,7 +323,7 @@ export default function StudioPage() {
                 width: "28px", height: "28px", borderRadius: "2px",
                 background: c.color,
                 border: respColor === c.color ? "2px solid #c0392b" : "1px solid #333",
-                cursor: "pointer", title: c.label,
+                cursor: "pointer",
               }} title={c.label} />
             ))}
             <input type="color" value={respColor} onChange={(e) => setRespColor(e.target.value)}
