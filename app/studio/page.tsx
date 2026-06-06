@@ -110,58 +110,98 @@ const widthPct = (w: PanelWidth) => {
   return "54%";
 };
 
+// ── BOÎTE MAIN LEVÉE (narration / caption) ──
+function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFont }: {
+  bgColor: string; textColor: string; text: string;
+  fontSize: number; align: "left" | "center"; bold: boolean; mangaFont: string;
+}) {
+  // Filtre SVG qui simule un trait de stylo/pinceau légèrement irrégulier
+  const filterId = `hd-${Math.random().toString(36).slice(2, 6)}`;
+  const isDark = bgColor === "#000000";
+
+  return (
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+      {/* Fond + bordure SVG avec effet main levée */}
+      <svg
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <filter id={filterId} x="-5%" y="-5%" width="110%" height="110%">
+            {/* Turbulence légère pour simuler le trait de stylo */}
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="2" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
+        {/* Ombre portée douce */}
+        <rect x="3" y="4" width="100%" height="100%" rx="2"
+          fill="rgba(0,0,0,0.15)" />
+        {/* Rectangle principal avec filtre main levée */}
+        <rect x="0" y="0" width="100%" height="100%" rx="2"
+          fill={bgColor}
+          stroke={isDark ? "#ffffff" : "#111111"}
+          strokeWidth={isDark ? "2" : "2.5"}
+          filter={`url(#${filterId})`}
+        />
+      </svg>
+
+      {/* Texte par-dessus */}
+      <div style={{
+        position: "absolute", inset: 0,
+        padding: align === "left" ? "10px 13px" : "8px 14px",
+        display: "flex",
+        alignItems: align === "left" ? "flex-start" : "center",
+        justifyContent: align === "center" ? "center" : "flex-start",
+        boxSizing: "border-box",
+      }}>
+        <span style={{
+          fontFamily: mangaFont,
+          fontSize: `${fontSize}px`,
+          fontWeight: bold ? 900 : 700,
+          color: textColor,
+          textTransform: "uppercase",
+          letterSpacing: align === "center" ? "2px" : "0.5px",
+          lineHeight: 1.3,
+          textAlign: align,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+          // Légère ombre sur le texte pour l'ancrer
+          textShadow: isDark ? "none" : "0 1px 0 rgba(0,0,0,0.08)",
+        }}>{text}</span>
+      </div>
+    </div>
+  );
+}
+
 // ── SVG BULLES ──
 function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string }) {
   const stroke = color === "#ffffff" ? "#000" : color;
   const mangaFont = "var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)";
 
-  // 📋 NARRATION — rectangle blanc bordure noire, texte gauche, sans queue (style tes planches)
+  // 📋 NARRATION — style main levée, trait stylo (filtre SVG turbulence)
   if (shape === "narration") return (
-    <div style={{
-      width: "100%", height: "100%",
-      background: bgColor === "#000000" ? "#000" : "#ffffff",
-      border: `3px solid #000`,
-      display: "flex", alignItems: "flex-start",
-      padding: "10px 12px",
-      boxSizing: "border-box",
-    }}>
-      <span style={{
-        fontFamily: mangaFont,
-        fontSize: `${fontSize + 2}px`,
-        fontWeight: 700,
-        color: bgColor === "#000000" ? "#ffffff" : "#000000",
-        textTransform: "uppercase",
-        letterSpacing: "1px",
-        lineHeight: 1.3,
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}>{text}</span>
-    </div>
+    <HandDrawnBox
+      bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
+      textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
+      text={text}
+      fontSize={fontSize + 2}
+      align="left"
+      bold={false}
+      mangaFont={mangaFont}
+    />
   );
 
-  // 🎬 CAPTION — grande boîte narration centrée, texte dramatique (comme bas de planche)
+  // 🎬 CAPTION — grande boîte narration centrée, trait stylo
   if (shape === "caption") return (
-    <div style={{
-      width: "100%", height: "100%",
-      background: bgColor === "#000000" ? "#000" : "#ffffff",
-      border: `4px solid #000`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "12px 16px",
-      boxSizing: "border-box",
-    }}>
-      <span style={{
-        fontFamily: mangaFont,
-        fontSize: `${fontSize + 4}px`,
-        fontWeight: 700,
-        color: bgColor === "#000000" ? "#ffffff" : "#000000",
-        textTransform: "uppercase",
-        letterSpacing: "2px",
-        lineHeight: 1.25,
-        textAlign: "center",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}>{text}</span>
-    </div>
+    <HandDrawnBox
+      bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
+      textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
+      text={text}
+      fontSize={fontSize + 4}
+      align="center"
+      bold={true}
+      mangaFont={mangaFont}
+    />
   );
 
   if (shape === "round") return (
