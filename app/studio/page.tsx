@@ -176,72 +176,124 @@ function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFo
 
 // ── SVG BULLES ──
 function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string }) {
-  const stroke = color === "#ffffff" ? "#000" : color;
+  const stroke = "#111111";
+  // Police naturelle pour le dialogue — pas Bangers (trop SFX), mais bold condensé lisible
+  const dialogFont = "'Nunito', 'Rajdhani', sans-serif";
   const mangaFont = "var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)";
 
-  // 📋 NARRATION — style main levée, trait stylo (filtre SVG turbulence)
+  // ID unique pour les filtres SVG
+  const fid = `f${Math.random().toString(36).slice(2,7)}`;
+  const sid = `s${Math.random().toString(36).slice(2,7)}`;
+
+  // Filtre commun : légère irrégularité + ombre douce
+  const filters = (
+    <defs>
+      <filter id={fid} x="-8%" y="-8%" width="116%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="5" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id={sid} x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="rgba(0,0,0,0.22)" floodOpacity="1"/>
+      </filter>
+    </defs>
+  );
+
+  // 📋 NARRATION / 🎬 CAPTION — style main levée
   if (shape === "narration") return (
-    <HandDrawnBox
-      bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
+    <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text}
-      fontSize={fontSize + 2}
-      align="left"
-      bold={false}
-      mangaFont={mangaFont}
-    />
+      text={text} fontSize={fontSize + 2} align="left" bold={false} mangaFont={dialogFont} />
   );
-
-  // 🎬 CAPTION — grande boîte narration centrée, trait stylo
   if (shape === "caption") return (
-    <HandDrawnBox
-      bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
+    <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text}
-      fontSize={fontSize + 4}
-      align="center"
-      bold={true}
-      mangaFont={mangaFont}
-    />
+      text={text} fontSize={fontSize + 4} align="center" bold={true} mangaFont={dialogFont} />
   );
 
+  // 💬 RONDE — ellipse organique avec filtre main levée + ombre
   if (shape === "round") return (
-    <svg viewBox="0 0 200 120" style={{ width: "100%", height: "100%" }}>
-      <ellipse cx="100" cy="55" rx="95" ry="45" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <polygon points="60,95 80,100 70,115" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="60" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily={mangaFont} fontWeight="bold">{text}</text>
+    <svg viewBox="0 0 200 125" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      {/* Ombre */}
+      <ellipse cx="102" cy="58" rx="95" ry="45" fill="rgba(0,0,0,0.15)" filter={`url(#${sid})`}/>
+      {/* Corps avec filtre wobbly */}
+      <g filter={`url(#${fid})`}>
+        <ellipse cx="100" cy="55" rx="95" ry="44" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+        <polygon points="55,92 72,98 62,116" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+      </g>
+      <text x="100" y="58" textAnchor="middle" dominantBaseline="middle"
+        fontSize={fontSize} fill={stroke}
+        fontFamily={dialogFont} fontWeight="800"
+        style={{ letterSpacing: "0.3px" }}>{text}</text>
     </svg>
   );
+
+  // 🗨️ RECTANGLE — rect organique
   if (shape === "rect") return (
-    <svg viewBox="0 0 200 120" style={{ width: "100%", height: "100%" }}>
-      <rect x="5" y="5" width="190" height="90" rx="2" fill={bgColor} stroke={stroke} strokeWidth="3"/>
-      <polygon points="70,95 90,100 80,115" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="52" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily={mangaFont} fontWeight="bold">{text}</text>
+    <svg viewBox="0 0 200 125" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      <g filter={`url(#${sid})`}>
+        <rect x="4" y="4" width="192" height="88" rx="6" fill="rgba(0,0,0,0.12)"/>
+      </g>
+      <g filter={`url(#${fid})`}>
+        <rect x="3" y="3" width="192" height="87" rx="6" fill={bgColor} stroke={stroke} strokeWidth="2.5"/>
+        <polygon points="65,90 85,96 75,116" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+      </g>
+      <text x="100" y="50" textAnchor="middle" dominantBaseline="middle"
+        fontSize={fontSize} fill={stroke}
+        fontFamily={dialogFont} fontWeight="800">{text}</text>
     </svg>
   );
+
+  // 💥 EXPLOSION — starburst irrégulier avec pointes variées
   if (shape === "explosion") return (
-    <svg viewBox="0 0 200 140" style={{ width: "100%", height: "100%" }}>
-      <polygon points="100,5 120,45 165,20 145,60 195,65 155,90 175,130 130,110 120,140 100,105 80,140 70,110 25,130 45,90 5,65 55,60 35,20 85,45" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="75" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily={mangaFont} fontWeight="bold">{text}</text>
+    <svg viewBox="0 0 200 145" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      <g filter={`url(#${sid})`}>
+        <polygon points="100,3 118,38 158,14 144,52 196,52 162,80 186,118 140,104 132,140 100,108 68,140 60,104 14,118 38,80 4,52 56,52 42,14 82,38" fill="rgba(0,0,0,0.15)"/>
+      </g>
+      <g filter={`url(#${fid})`}>
+        <polygon points="100,3 118,38 158,14 144,52 196,52 162,80 186,118 140,104 132,140 100,108 68,140 60,104 14,118 38,80 4,52 56,52 42,14 82,38"
+          fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+      </g>
+      <text x="100" y="76" textAnchor="middle" dominantBaseline="middle"
+        fontSize={fontSize} fill={stroke}
+        fontFamily={mangaFont} fontWeight="bold">{text}</text>
     </svg>
   );
+
+  // 💭 PENSÉE
   if (shape === "thought") return (
-    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%" }}>
-      <ellipse cx="100" cy="55" rx="90" ry="42" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <circle cx="75" cy="105" r="10" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <circle cx="60" cy="118" r="6" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <circle cx="48" cy="127" r="4" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="58" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize} fill={stroke} fontFamily="Georgia, serif" fontStyle="italic">{text}</text>
+    <svg viewBox="0 0 200 135" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      <g filter={`url(#${fid})`}>
+        <ellipse cx="100" cy="54" rx="90" ry="42" fill={bgColor} stroke={stroke} strokeWidth="2" strokeDasharray="6,2"/>
+        <circle cx="72" cy="103" r="11" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="57" cy="118" r="7" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="45" cy="129" r="5" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      </g>
+      <text x="100" y="57" textAnchor="middle" dominantBaseline="middle"
+        fontSize={fontSize} fill={stroke}
+        fontFamily={dialogFont} fontStyle="italic" fontWeight="600">{text}</text>
     </svg>
   );
-  // shout
+
+  // 📢 CRI — rectangle agité
   return (
-    <svg viewBox="0 0 200 120" style={{ width: "100%", height: "100%" }}>
-      <rect x="5" y="5" width="190" height="80" fill={bgColor} stroke={stroke} strokeWidth="3"/>
-      <line x1="5" y1="5" x2="195" y2="85" stroke={stroke} strokeWidth="1" opacity="0.3"/>
-      <line x1="195" y1="5" x2="5" y2="85" stroke={stroke} strokeWidth="1" opacity="0.3"/>
-      <polygon points="85,85 105,85 95,110" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <text x="100" y="48" textAnchor="middle" dominantBaseline="middle" fontSize={fontSize + 2} fill={stroke} fontFamily={mangaFont} fontWeight="bold" letterSpacing="2">{text}</text>
+    <svg viewBox="0 0 200 125" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      <g filter={`url(#${sid})`}>
+        <rect x="5" y="5" width="190" height="82" rx="1" fill="rgba(0,0,0,0.15)"/>
+      </g>
+      <g filter={`url(#${fid})`}>
+        <rect x="3" y="3" width="190" height="80" rx="1" fill={bgColor} stroke={stroke} strokeWidth="3.5"/>
+        <line x1="3" y1="3" x2="193" y2="83" stroke={stroke} strokeWidth="1" opacity="0.15"/>
+        <line x1="193" y1="3" x2="3" y2="83" stroke={stroke} strokeWidth="1" opacity="0.15"/>
+        <polygon points="82,83 102,83 92,112" fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+      </g>
+      <text x="100" y="46" textAnchor="middle" dominantBaseline="middle"
+        fontSize={fontSize + 2} fill={stroke}
+        fontFamily={mangaFont} fontWeight="bold" letterSpacing="2">{text}</text>
     </svg>
   );
 }
