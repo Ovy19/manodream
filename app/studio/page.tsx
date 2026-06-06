@@ -152,8 +152,8 @@ function PanelComp({ panel, onImageDrop, selected, onClick }: {
       style={{
         flex: panel.flex,
         minHeight: panel.shape === "small-square" ? "120px" : "200px",
-        background: panel.image ? `url(${panel.image}) center/cover` : "#111",
-        border: selected ? "2px solid #c0392b" : "1px solid #222",
+        background: panel.image ? `url(${panel.image}) center/cover` : "#f8fafc",
+        border: selected ? "2px solid #4a90d9" : "1px solid #e2e8f0",
         cursor: "pointer",
         position: "relative",
         clipPath,
@@ -164,7 +164,7 @@ function PanelComp({ panel, onImageDrop, selected, onClick }: {
       }}
     >
       {!panel.image && (
-        <div style={{ textAlign: "center", color: "#333", pointerEvents: "none" }}>
+        <div style={{ textAlign: "center", color: "#cbd5e1", pointerEvents: "none" }}>
           <div style={{ fontSize: "28px", marginBottom: "8px" }}>🖼️</div>
           <div style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" }}>Déposer image</div>
         </div>
@@ -175,7 +175,7 @@ function PanelComp({ panel, onImageDrop, selected, onClick }: {
           onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
           style={{
             position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)",
-            background: "#c0392b", color: "white", border: "none",
+            background: "#4a90d9", color: "white", border: "none",
             fontSize: "10px", fontWeight: 700, letterSpacing: "1px",
             padding: "5px 14px", cursor: "pointer", textTransform: "uppercase",
           }}
@@ -275,13 +275,13 @@ export default function StudioPage() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#06060a", color: "#f0eff8", fontFamily: "var(--font-rajdhani, 'Rajdhani', sans-serif)" }}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f0f2f5", color: "#1a1a2e", fontFamily: "var(--font-rajdhani, 'Rajdhani', sans-serif)" }}>
 
       {/* ── SIDEBAR GAUCHE ── */}
       <div style={{
         width: "240px", flexShrink: 0,
-        background: "#0a0a10",
-        borderRight: "1px solid #1a1a2a",
+        background: "#ffffff",
+        borderRight: "1px solid #e2e8f0",
         display: "flex", flexDirection: "column",
         padding: "16px 12px",
         gap: "24px",
@@ -290,8 +290,8 @@ export default function StudioPage() {
         zIndex: 50,
       }}>
         {/* Logo */}
-        <div style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "20px", letterSpacing: "4px", borderBottom: "1px solid #1a1a2a", paddingBottom: "12px" }}>
-          MANO<span style={{ color: "#c0392b" }}>STUDIO</span>
+        <div style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "20px", letterSpacing: "4px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", color: "#1a1a2e" }}>
+          MANO<span style={{ color: "#4a90d9" }}>STUDIO</span>
         </div>
 
         {/* Générer auto */}
@@ -339,8 +339,8 @@ export default function StudioPage() {
             {BUBBLE_SHAPES.map((bs) => (
               <button key={bs.shape} onClick={() => setSelectedBubbleShape(bs.shape)} title={bs.label} style={{
                 width: "40px", height: "40px", fontSize: "18px",
-                background: selectedBubbleShape === bs.shape ? "rgba(192,57,43,0.3)" : "#111",
-                border: selectedBubbleShape === bs.shape ? "1px solid #c0392b" : "1px solid #222",
+                background: selectedBubbleShape === bs.shape ? "rgba(74,144,217,0.15)" : "#f8fafc",
+                border: selectedBubbleShape === bs.shape ? "1px solid #4a90d9" : "1px solid #e2e8f0",
                 cursor: "pointer", borderRadius: "2px",
               }}>{bs.icon}</button>
             ))}
@@ -384,21 +384,21 @@ export default function StudioPage() {
       </div>
 
       {/* ── CANVAS CENTRAL ── */}
-      <div style={{ marginLeft: "240px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 24px 80px" }}>
+      <div style={{ marginLeft: "240px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 24px 80px", background: "#f0f2f5" }}>
 
         <div style={{ width: "100%", maxWidth: "600px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "28px", letterSpacing: "3px" }}>
+          <h1 style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "28px", letterSpacing: "3px", color: "#1a1a2e" }}>
             Studio — Épisode 1
           </h1>
-          <a href="/" style={{ fontSize: "11px", color: "#555", letterSpacing: "2px", textDecoration: "none" }}>← Retour</a>
+          <a href="/" style={{ fontSize: "11px", color: "#94a3b8", letterSpacing: "2px", textDecoration: "none" }}>← Retour</a>
         </div>
 
         {blocks.length === 0 && (
           <div style={{
             width: "100%", maxWidth: "600px", height: "300px",
-            border: "1px dashed #1a1a2a", display: "flex",
+            border: "2px dashed #cbd5e1", display: "flex",
             flexDirection: "column", alignItems: "center", justifyContent: "center",
-            gap: "16px", color: "#333",
+            gap: "16px", color: "#94a3b8", background: "#fff", borderRadius: "8px",
           }}>
             <div style={{ fontSize: "40px" }}>🎨</div>
             <div style={{ fontSize: "12px", letterSpacing: "2px", textTransform: "uppercase" }}>
@@ -571,23 +571,24 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
 // ── STYLES UTILITAIRES ──
 const labelStyle: React.CSSProperties = {
   fontSize: "9px", fontWeight: 700, letterSpacing: "2px",
-  textTransform: "uppercase", color: "#c0392b", marginBottom: "8px",
+  textTransform: "uppercase", color: "#4a90d9", marginBottom: "8px",
 };
 const btnDarkStyle: React.CSSProperties = {
-  width: "100%", padding: "8px 12px", background: "#0f0f18",
-  border: "1px solid #1a1a2a", color: "#8b8b9a",
+  width: "100%", padding: "8px 12px", background: "#f8fafc",
+  border: "1px solid #e2e8f0", color: "#64748b",
   fontSize: "11px", fontWeight: 600, letterSpacing: "1px",
   cursor: "pointer", textAlign: "left", transition: "all 0.2s",
-  marginBottom: "2px",
+  marginBottom: "2px", borderRadius: "4px",
 };
 const btnRedStyle: React.CSSProperties = {
-  width: "100%", padding: "10px 12px", background: "#c0392b",
+  width: "100%", padding: "10px 12px", background: "#4a90d9",
   border: "none", color: "white",
   fontSize: "11px", fontWeight: 700, letterSpacing: "1px",
   cursor: "pointer", textTransform: "uppercase", marginBottom: "4px",
+  borderRadius: "4px",
 };
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "8px", background: "#0f0f18",
-  border: "1px solid #1a1a2a", color: "#f0eff8",
-  fontSize: "12px", outline: "none",
+  width: "100%", padding: "8px", background: "#f8fafc",
+  border: "1px solid #e2e8f0", color: "#1a1a2e",
+  fontSize: "12px", outline: "none", borderRadius: "4px",
 };
