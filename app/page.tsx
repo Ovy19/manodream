@@ -62,9 +62,65 @@ export default function Home() {
         .hero-bg {
           position: absolute; inset: 0;
           background:
-            radial-gradient(ellipse at 30% 40%, rgba(192,57,43,0.25) 0%, transparent 60%),
-            radial-gradient(ellipse at 80% 60%, rgba(231,76,60,0.1) 0%, transparent 50%),
-            linear-gradient(160deg, #0f0a14 0%, #0a0a0f 40%, #100a0a 100%);
+            radial-gradient(ellipse at 72% 18%, rgba(140,180,255,0.18) 0%, transparent 35%),
+            radial-gradient(ellipse at 30% 40%, rgba(192,57,43,0.15) 0%, transparent 55%),
+            linear-gradient(180deg, #03060f 0%, #060918 40%, #0a0a14 70%, #080608 100%);
+        }
+        /* Lune */
+        .hero-moon {
+          position: absolute;
+          top: 10%; right: 22%;
+          width: 90px; height: 90px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 40% 35%, #e8f0ff 0%, #b8d0ff 40%, #7aa0e8 100%);
+          box-shadow:
+            0 0 40px rgba(140,180,255,0.6),
+            0 0 80px rgba(140,180,255,0.3),
+            0 0 160px rgba(140,180,255,0.15);
+          animation: moonGlow 4s ease-in-out infinite;
+        }
+        .hero-moon::before {
+          content: '';
+          position: absolute;
+          top: 12px; left: 18px;
+          width: 22px; height: 20px;
+          border-radius: 50%;
+          background: rgba(100,140,220,0.25);
+          box-shadow: 30px 8px 0 rgba(100,140,220,0.15), 10px 30px 0 rgba(100,140,220,0.1);
+        }
+        @keyframes moonGlow {
+          0%, 100% { box-shadow: 0 0 40px rgba(140,180,255,0.6), 0 0 80px rgba(140,180,255,0.3), 0 0 160px rgba(140,180,255,0.15); }
+          50% { box-shadow: 0 0 60px rgba(140,180,255,0.8), 0 0 120px rgba(140,180,255,0.4), 0 0 200px rgba(140,180,255,0.2); }
+        }
+        /* Rayon de lune */
+        .hero-moonray {
+          position: absolute;
+          top: 0; right: 0; bottom: 0; left: 0;
+          background: radial-gradient(ellipse at 72% 18%, rgba(140,180,255,0.08) 0%, transparent 55%);
+          pointer-events: none;
+        }
+        /* City */
+        .hero-city {
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          height: 55%;
+          pointer-events: none;
+        }
+        /* Étoiles */
+        .hero-stars {
+          position: absolute; inset: 0;
+          background-image:
+            radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.7) 0%, transparent 100%),
+            radial-gradient(1px 1px at 25% 8%, rgba(255,255,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 40% 20%, rgba(200,220,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 55% 5%, rgba(255,255,255,0.4) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 15% 35%, rgba(200,220,255,0.5) 0%, transparent 100%),
+            radial-gradient(1px 1px at 85% 12%, rgba(255,255,255,0.6) 0%, transparent 100%),
+            radial-gradient(1px 1px at 92% 28%, rgba(200,220,255,0.4) 0%, transparent 100%),
+            radial-gradient(1px 1px at 60% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+            radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.4) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 78% 22%, rgba(200,220,255,0.5) 0%, transparent 100%);
+          pointer-events: none;
         }
         .hero-lines { position: absolute; inset: 0; overflow: hidden; }
         .hero-lines::before, .hero-lines::after {
@@ -252,7 +308,89 @@ export default function Home() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-bg" />
+        <div className="hero-stars" />
+        <div className="hero-moon" />
+        <div className="hero-moonray" />
         <div className="hero-lines" />
+
+        {/* City skyline SVG */}
+        <div className="hero-city">
+          <svg viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" style={{position:"absolute",bottom:0,width:"100%",height:"100%"}}>
+            {/* Bâtiments arrière-plan (bleutés) */}
+            <g fill="#0a0f1f" opacity="0.9">
+              <rect x="0" y="180" width="60" height="220"/>
+              <rect x="55" y="140" width="45" height="260"/>
+              <rect x="95" y="200" width="30" height="200"/>
+              <rect x="120" y="100" width="55" height="300"/>
+              <rect x="170" y="160" width="40" height="240"/>
+              <rect x="205" y="120" width="70" height="280"/>
+              <rect x="270" y="180" width="35" height="220"/>
+              <rect x="300" y="80" width="50" height="320"/>
+              <rect x="345" y="150" width="65" height="250"/>
+              <rect x="405" y="110" width="40" height="290"/>
+              <rect x="440" y="170" width="55" height="230"/>
+              <rect x="490" y="90" width="60" height="310"/>
+              <rect x="545" y="160" width="35" height="240"/>
+              <rect x="575" y="130" width="70" height="270"/>
+              <rect x="640" y="190" width="40" height="210"/>
+              <rect x="675" y="70" width="55" height="330"/>
+              <rect x="725" y="140" width="45" height="260"/>
+              <rect x="765" y="100" width="65" height="300"/>
+              <rect x="825" y="170" width="40" height="230"/>
+              <rect x="860" y="120" width="55" height="280"/>
+              <rect x="910" y="80" width="60" height="320"/>
+              <rect x="965" y="150" width="50" height="250"/>
+              <rect x="1010" y="110" width="70" height="290"/>
+              <rect x="1075" y="180" width="35" height="220"/>
+              <rect x="1105" y="130" width="55" height="270"/>
+              <rect x="1155" y="90" width="65" height="310"/>
+              <rect x="1215" y="160" width="40" height="240"/>
+              <rect x="1250" y="100" width="60" height="300"/>
+              <rect x="1305" y="140" width="50" height="260"/>
+              <rect x="1350" y="180" width="90" height="220"/>
+            </g>
+            {/* Bâtiments premier plan (plus sombres) */}
+            <g fill="#060810" opacity="1">
+              <rect x="0" y="250" width="80" height="150"/>
+              <rect x="75" y="220" width="55" height="180"/>
+              <rect x="125" y="270" width="70" height="130"/>
+              <rect x="190" y="230" width="90" height="170"/>
+              <rect x="275" y="260" width="60" height="140"/>
+              <rect x="330" y="200" width="80" height="200"/>
+              <rect x="405" y="250" width="65" height="150"/>
+              <rect x="465" y="220" width="95" height="180"/>
+              <rect x="555" y="240" width="70" height="160"/>
+              <rect x="620" y="270" width="55" height="130"/>
+              <rect x="670" y="210" width="85" height="190"/>
+              <rect x="750" y="255" width="65" height="145"/>
+              <rect x="810" y="230" width="90" height="170"/>
+              <rect x="895" y="265" width="60" height="135"/>
+              <rect x="950" y="215" width="80" height="185"/>
+              <rect x="1025" y="245" width="75" height="155"/>
+              <rect x="1095" y="260" width="65" height="140"/>
+              <rect x="1155" y="220" width="90" height="180"/>
+              <rect x="1240" y="250" width="70" height="150"/>
+              <rect x="1305" y="230" width="135" height="170"/>
+            </g>
+            {/* Fenêtres lumineuses (bleu lune) */}
+            <g fill="rgba(140,180,255,0.15)">
+              <rect x="128" y="115" width="6" height="8"/><rect x="140" y="115" width="6" height="8"/>
+              <rect x="128" y="130" width="6" height="8"/><rect x="140" y="130" width="6" height="8"/>
+              <rect x="308" y="95" width="6" height="8"/><rect x="320" y="95" width="6" height="8"/>
+              <rect x="308" y="110" width="6" height="8"/>
+              <rect x="502" y="105" width="6" height="8"/><rect x="514" y="105" width="6" height="8"/>
+              <rect x="680" y="85" width="6" height="8"/><rect x="692" y="85" width="6" height="8"/>
+              <rect x="680" y="100" width="6" height="8"/>
+              <rect x="912" y="95" width="6" height="8"/><rect x="924" y="95" width="6" height="8"/>
+              <rect x="912" y="110" width="6" height="8"/><rect x="924" y="110" width="6" height="8"/>
+              <rect x="1158" y="105" width="6" height="8"/><rect x="1170" y="105" width="6" height="8"/>
+              <rect x="1255" y="115" width="6" height="8"/><rect x="1267" y="115" width="6" height="8"/>
+            </g>
+            {/* Ligne de sol */}
+            <rect x="0" y="398" width="1440" height="2" fill="rgba(140,180,255,0.1)"/>
+          </svg>
+        </div>
+
         <div className="hero-silhouette">
           <div className="silhouette-shape" />
         </div>
