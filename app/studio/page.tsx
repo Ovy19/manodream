@@ -2,6 +2,18 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import html2canvas from "html2canvas";
+
+// ── GESTION PROJETS (localStorage) ──
+interface Project {
+  id: string;
+  titre: string;
+  blocks: Block[];
+  bubbles: Bubble[];
+  sfxList: SFX[];
+  savedAt: string;
+  thumb?: string; // miniature base64
+}
 
 // ── TYPES ──
 type BubbleShape = "round" | "rect" | "explosion" | "thought" | "shout" | "narration" | "caption";
@@ -35,6 +47,7 @@ interface Bubble {
   fontSize: number;
   color: string;
   bgColor: string;
+  textAlign?: "left" | "center" | "right";
 }
 
 // SFX = onomatopée style webtoon (BAM, BOUM, TCHAC...)
@@ -114,30 +127,26 @@ const widthPct = (w: PanelWidth) => {
 // ── BOÎTE MAIN LEVÉE (narration / caption) ──
 function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFont }: {
   bgColor: string; textColor: string; text: string;
-  fontSize: number; align: "left" | "center"; bold: boolean; mangaFont: string;
+  fontSize: number; align: "left" | "center" | "right"; bold: boolean; mangaFont: string;
 }) {
   // Filtre SVG qui simule un trait de stylo/pinceau légèrement irrégulier
   const filterId = `hd-${Math.random().toString(36).slice(2, 6)}`;
   const isDark = bgColor === "#000000";
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      {/* Fond + bordure SVG avec effet main levée */}
+    <div style={{ width: "100%", height: "100%", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* Fond + bordure SVG avec effet main levée — s'étire sur toute la div */}
       <svg
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
         preserveAspectRatio="none"
       >
         <defs>
           <filter id={filterId} x="-5%" y="-5%" width="110%" height="110%">
-            {/* Turbulence légère pour simuler le trait de stylo */}
             <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="2" result="noise"/>
             <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
           </filter>
         </defs>
-        {/* Ombre portée douce */}
-        <rect x="3" y="4" width="100%" height="100%" rx="2"
-          fill="rgba(0,0,0,0.15)" />
-        {/* Rectangle principal avec filtre main levée */}
+        <rect x="3" y="4" width="100%" height="100%" rx="2" fill="rgba(0,0,0,0.15)" />
         <rect x="0" y="0" width="100%" height="100%" rx="2"
           fill={bgColor}
           stroke={isDark ? "#ffffff" : "#111111"}
@@ -146,28 +155,30 @@ function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFo
         />
       </svg>
 
-      {/* Texte par-dessus */}
+      {/* Texte centré par-dessus */}
       <div style={{
-        position: "absolute", inset: 0,
-        padding: align === "left" ? "10px 13px" : "8px 14px",
-        display: "flex",
-        alignItems: align === "left" ? "flex-start" : "center",
-        justifyContent: align === "center" ? "center" : "flex-start",
+        position: "relative",
+        width: "100%",
+        padding: "10px 16px",
         boxSizing: "border-box",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center",
       }}>
         <span style={{
-          fontFamily: mangaFont,
+          fontFamily: "var(--font-nunito, 'Nunito', 'Georgia', serif)",
           fontSize: `${fontSize}px`,
-          fontWeight: bold ? 900 : 700,
+          fontWeight: 700,
+          fontStyle: "italic",
           color: textColor,
-          textTransform: "uppercase",
-          letterSpacing: align === "center" ? "2px" : "0.5px",
-          lineHeight: 1.3,
+          textTransform: "none",
+          letterSpacing: "0.3px",
+          lineHeight: 1.5,
           textAlign: align,
+          width: "100%",
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
-          // Légère ombre sur le texte pour l'ancrer
-          textShadow: isDark ? "none" : "0 1px 0 rgba(0,0,0,0.08)",
+          textShadow: isDark ? "none" : "0 1px 0 rgba(0,0,0,0.06)",
         }}>{text}</span>
       </div>
     </div>
@@ -175,9 +186,8 @@ function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFo
 }
 
 // ── SVG BULLES ──
-function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string }) {
+function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center" }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string; textAlign?: "left" | "center" | "right" }) {
   const stroke = "#111111";
-  // Police naturelle pour le dialogue — pas Bangers (trop SFX), mais bold condensé lisible
   const dialogFont = "var(--font-oswald, 'Oswald', 'Rajdhani', sans-serif)";
   const mangaFont = "var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)";
 
@@ -202,12 +212,12 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor }: { shape: BubbleSha
   if (shape === "narration") return (
     <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text} fontSize={fontSize + 2} align="left" bold={true} mangaFont={dialogFont} />
+      text={text} fontSize={fontSize + 2} align={textAlign} bold={true} mangaFont={dialogFont} />
   );
   if (shape === "caption") return (
     <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text} fontSize={fontSize + 4} align="center" bold={true} mangaFont={dialogFont} />
+      text={text} fontSize={fontSize + 4} align={textAlign} bold={true} mangaFont={dialogFont} />
   );
 
   // 💬 RONDE — style Solo Leveling : ellipse propre, queue fine et sharp
@@ -526,7 +536,83 @@ export default function StudioPage() {
   const [episodeId, setEpisodeId] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
 
+  // ── Projets ──
+  const [showProjects, setShowProjects] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentProjectId, setCurrentProjectId] = useState<string>(() => uid());
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const loadProjects = useCallback(() => {
+    try {
+      const raw = localStorage.getItem("manodream_projects");
+      setProjects(raw ? JSON.parse(raw) : []);
+    } catch { setProjects([]); }
+  }, []);
+
+  useEffect(() => { loadProjects(); }, [loadProjects]);
+
+  const saveProject = useCallback(async (showFeedback = true) => {
+    // Miniature rapide
+    let thumb = "";
+    if (canvasRef.current) {
+      try {
+        const cvs = await html2canvas(canvasRef.current, { scale: 0.15, useCORS: true, logging: false });
+        thumb = cvs.toDataURL("image/jpeg", 0.5);
+      } catch {}
+    }
+    const project: Project = { id: currentProjectId, titre, blocks, bubbles, sfxList, savedAt: new Date().toISOString(), thumb };
+    const raw = localStorage.getItem("manodream_projects");
+    const all: Project[] = raw ? JSON.parse(raw) : [];
+    const idx = all.findIndex(p => p.id === currentProjectId);
+    if (idx >= 0) all[idx] = project; else all.unshift(project);
+    localStorage.setItem("manodream_projects", JSON.stringify(all));
+    setProjects([...all]);
+    if (showFeedback) { setSaveMsg("✅ Projet sauvegardé !"); setTimeout(() => setSaveMsg(""), 3000); }
+  }, [currentProjectId, titre, blocks, bubbles, sfxList]);
+
+  const loadProject = (p: Project) => {
+    setBlocks(p.blocks || []);
+    setBubbles(p.bubbles || []);
+    setSfxList(p.sfxList || []);
+    setTitre(p.titre || "");
+    setCurrentProjectId(p.id);
+    setShowProjects(false);
+    setSaveMsg("📂 Projet chargé !");
+    setTimeout(() => setSaveMsg(""), 3000);
+  };
+
+  const newProject = () => {
+    setBlocks([]); setBubbles([]); setSfxList([]);
+    setTitre("Nouveau projet");
+    setCurrentProjectId(uid());
+    setShowProjects(false);
+  };
+
+  const deleteProject = (id: string) => {
+    const all = projects.filter(p => p.id !== id);
+    localStorage.setItem("manodream_projects", JSON.stringify(all));
+    setProjects(all);
+  };
+
+  const exportPNG = useCallback(async () => {
+    if (!canvasRef.current) return;
+    setSaveMsg("⏳ Export en cours...");
+    try {
+      const cvs = await html2canvas(canvasRef.current, { scale: 2, useCORS: true, logging: false, backgroundColor: "#ffffff" });
+      const link = document.createElement("a");
+      link.download = `${titre.replace(/\s+/g, "_")}.png`;
+      link.href = cvs.toDataURL("image/png");
+      link.click();
+      setSaveMsg("✅ PNG exporté !");
+    } catch { setSaveMsg("❌ Erreur export"); }
+    setTimeout(() => setSaveMsg(""), 3000);
+  }, [canvasRef, titre]);
+
+  // Sauvegarde automatique toutes les 30s
+  useEffect(() => {
+    const t = setInterval(() => saveProject(false), 30000);
+    return () => clearInterval(t);
+  }, [saveProject]);
 
   // Charger
   useEffect(() => {
@@ -690,6 +776,102 @@ export default function StudioPage() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f0f2f5", fontFamily: "var(--font-rajdhani, 'Rajdhani', sans-serif)" }}>
 
+      {/* ── PANNEAU PROJETS ── */}
+      {showProjects && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}>
+          {/* Overlay */}
+          <div onClick={() => setShowProjects(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} />
+          {/* Drawer */}
+          <div style={{
+            position: "relative", zIndex: 201,
+            width: "380px", height: "100vh", background: "#fff",
+            boxShadow: "4px 0 24px rgba(0,0,0,0.15)",
+            display: "flex", flexDirection: "column",
+          }}>
+            {/* Header */}
+            <div style={{ padding: "20px", borderBottom: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "20px", letterSpacing: "3px", color: "#1a1a2e" }}>MES PROJETS</div>
+                <div style={{ fontSize: "10px", color: "#aaa", letterSpacing: "1px" }}>{projects.length} projet{projects.length !== 1 ? "s" : ""} sauvegardé{projects.length !== 1 ? "s" : ""}</div>
+              </div>
+              <button onClick={() => setShowProjects(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#aaa" }}>✕</button>
+            </div>
+
+            {/* Bouton Nouveau projet */}
+            <div style={{ padding: "12px 20px", borderBottom: "1px solid #f0f0f0" }}>
+              <button onClick={newProject} style={{
+                width: "100%", padding: "12px", background: "#1a1a2e", border: "none",
+                color: "white", fontSize: "11px", fontWeight: 700, cursor: "pointer",
+                borderRadius: "6px", letterSpacing: "1px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              }}>
+                ✚ Nouveau projet
+              </button>
+            </div>
+
+            {/* Bouton sauvegarder projet actuel */}
+            <div style={{ padding: "8px 20px", borderBottom: "1px solid #f0f0f0" }}>
+              <button onClick={() => saveProject(true)} style={{
+                width: "100%", padding: "10px", background: "#2563eb", border: "none",
+                color: "white", fontSize: "11px", fontWeight: 700, cursor: "pointer",
+                borderRadius: "6px", letterSpacing: "1px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              }}>
+                💾 Sauvegarder le projet actuel
+              </button>
+            </div>
+
+            {/* Liste des projets */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+              {projects.length === 0 ? (
+                <div style={{ textAlign: "center", color: "#bbb", fontSize: "12px", marginTop: "40px" }}>
+                  <div style={{ fontSize: "40px", marginBottom: "12px" }}>📂</div>
+                  Aucun projet sauvegardé.<br/>Clique sur "Sauvegarder" pour commencer.
+                </div>
+              ) : projects.map(p => {
+                const isCurrent = p.id === currentProjectId;
+                const date = new Date(p.savedAt);
+                const dateStr = date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) + " · " + date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+                return (
+                  <div key={p.id} style={{
+                    border: `2px solid ${isCurrent ? "#2563eb" : "#f0f0f0"}`,
+                    borderRadius: "8px", marginBottom: "10px", overflow: "hidden",
+                    cursor: "pointer", transition: "border-color 0.2s",
+                  }}>
+                    {/* Miniature */}
+                    {p.thumb && (
+                      <div style={{ height: "80px", background: "#f8f8f8", overflow: "hidden" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.thumb} alt="" style={{ width: "100%", objectFit: "cover" }} />
+                      </div>
+                    )}
+                    {!p.thumb && (
+                      <div style={{ height: "60px", background: "#f8f8f8", display: "flex", alignItems: "center", justifyContent: "center", color: "#ddd", fontSize: "24px" }}>🖼</div>
+                    )}
+                    <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: "13px", color: "#1a1a2e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.titre}</div>
+                        <div style={{ fontSize: "10px", color: "#aaa", marginTop: "2px" }}>{dateStr} · {(p.blocks || []).length} blocks</div>
+                        {isCurrent && <div style={{ fontSize: "9px", color: "#2563eb", fontWeight: 700, marginTop: "2px" }}>● EN COURS</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                        <button onClick={() => loadProject(p)} style={{
+                          padding: "5px 10px", background: isCurrent ? "#f0f4ff" : "#1a1a2e", border: "none",
+                          color: isCurrent ? "#2563eb" : "white", fontSize: "9px", fontWeight: 700,
+                          cursor: "pointer", borderRadius: "4px",
+                        }}>{isCurrent ? "Actif" : "Ouvrir"}</button>
+                        <button onClick={(e) => { e.stopPropagation(); if (confirm(`Supprimer "${p.titre}" ?`)) deleteProject(p.id); }} style={{
+                          padding: "5px 8px", background: "none", border: "1px solid #fee2e2",
+                          color: "#ef4444", fontSize: "9px", cursor: "pointer", borderRadius: "4px",
+                        }}>🗑</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── SIDEBAR ── */}
       <div style={{
         width: "230px", flexShrink: 0, background: "#fff",
@@ -847,20 +1029,81 @@ export default function StudioPage() {
           </div>
           <button onClick={addBubble} style={btnBlue}>+ Ajouter bulle</button>
 
-          {/* Supprimer bulle sélectionnée */}
-          {selectedBubble && (
-            <div style={{ marginTop: "10px", padding: "10px", background: "rgba(192,57,43,0.06)", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "6px" }}>
-              <div style={{ fontSize: "9px", color: "#c0392b", letterSpacing: "1px", marginBottom: "6px", fontWeight: 700 }}>BULLE SÉLECTIONNÉE</div>
-              <button onClick={() => { deleteBubble(selectedBubble); setSelectedBubble(null); }} style={{
-                width: "100%", padding: "9px", background: "#c0392b", border: "none",
-                color: "white", fontSize: "11px", fontWeight: 700, letterSpacing: "1px",
-                cursor: "pointer", borderRadius: "4px", textTransform: "uppercase",
-              }}>
-                🗑 Supprimer cette bulle
-              </button>
-              <div style={{ fontSize: "8px", color: "#aaa", textAlign: "center", marginTop: "4px" }}>ou appuie sur ⌫ Delete</div>
-            </div>
-          )}
+          {/* Contrôles bulle sélectionnée */}
+          {selectedBubble && (() => {
+            const b = bubbles.find(x => x.id === selectedBubble);
+            if (!b) return null;
+            const update = (patch: Partial<Bubble>) =>
+              setBubbles(prev => prev.map(x => x.id === selectedBubble ? { ...x, ...patch } : x));
+            return (
+              <div style={{ marginTop: "8px", padding: "10px", background: "rgba(192,57,43,0.04)", border: "1px solid rgba(192,57,43,0.15)", borderRadius: "6px" }}>
+                <div style={{ fontSize: "9px", color: "#c0392b", letterSpacing: "1px", marginBottom: "8px", fontWeight: 700 }}>✏️ BULLE SÉLECTIONNÉE</div>
+
+                {/* Taille */}
+                <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px" }}>TAILLE</div>
+                <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "7px", color: "#aaa", marginBottom: "2px" }}>LARGEUR</div>
+                    <input type="number" value={b.width} min={60} max={800}
+                      onChange={e => update({ width: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "5px", border: "1px solid #e2e8f0", borderRadius: "3px", fontSize: "11px", fontWeight: 700 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "7px", color: "#aaa", marginBottom: "2px" }}>HAUTEUR</div>
+                    <input type="number" value={b.height} min={40} max={600}
+                      onChange={e => update({ height: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "5px", border: "1px solid #e2e8f0", borderRadius: "3px", fontSize: "11px", fontWeight: 700 }} />
+                  </div>
+                </div>
+
+                {/* Position */}
+                <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px" }}>POSITION</div>
+                <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "7px", color: "#aaa", marginBottom: "2px" }}>X</div>
+                    <input type="number" value={b.x}
+                      onChange={e => update({ x: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "5px", border: "1px solid #e2e8f0", borderRadius: "3px", fontSize: "11px", fontWeight: 700 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "7px", color: "#aaa", marginBottom: "2px" }}>Y</div>
+                    <input type="number" value={b.y}
+                      onChange={e => update({ y: Number(e.target.value) })}
+                      style={{ width: "100%", padding: "5px", border: "1px solid #e2e8f0", borderRadius: "3px", fontSize: "11px", fontWeight: 700 }} />
+                  </div>
+                </div>
+
+                {/* Taille police */}
+                <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px" }}>TAILLE POLICE : {b.fontSize}px</div>
+                <input type="range" min="10" max="36" value={b.fontSize}
+                  onChange={e => update({ fontSize: Number(e.target.value) })}
+                  style={{ width: "100%", marginBottom: "8px", accentColor: "#c0392b" }} />
+
+                {/* Alignement texte */}
+                <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px" }}>ALIGNEMENT</div>
+                <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
+                  {(["left", "center", "right"] as const).map((a) => {
+                    const icons = { left: "⬅ Gauche", center: "↔ Centre", right: "Droite ➡" };
+                    const active = (b.textAlign ?? "center") === a;
+                    return (
+                      <button key={a} onClick={() => update({ textAlign: a })} style={{
+                        flex: 1, padding: "6px 2px", border: `1px solid ${active ? "#c0392b" : "#e0e0e0"}`,
+                        background: active ? "#c0392b" : "#fff", color: active ? "#fff" : "#555",
+                        fontSize: "9px", fontWeight: 700, cursor: "pointer", borderRadius: "3px",
+                        letterSpacing: "0.5px",
+                      }}>{icons[a]}</button>
+                    );
+                  })}
+                </div>
+
+                <button onClick={() => { deleteBubble(selectedBubble); }} style={{
+                  width: "100%", padding: "7px", background: "#c0392b", border: "none",
+                  color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px",
+                }}>🗑 Supprimer</button>
+                <div style={{ fontSize: "8px", color: "#bbb", textAlign: "center", marginTop: "3px" }}>ou ⌫ Delete</div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── SECTION SFX ── */}
@@ -935,17 +1178,25 @@ export default function StudioPage() {
         <div style={{ width: "100%", maxWidth: "800px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <input value={titre} onChange={(e) => setTitre(e.target.value)}
             style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "22px", letterSpacing: "3px", color: "#1a1a2e", border: "none", background: "transparent", outline: "none", flex: 1, minWidth: "120px" }} />
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {saveMsg && <span style={{ fontSize: "11px", color: "#4a90d9" }}>{saveMsg}</span>}
+          <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+            {saveMsg && <span style={{ fontSize: "11px", color: "#4a90d9", whiteSpace: "nowrap" }}>{saveMsg}</span>}
+            <button onClick={() => { setShowProjects(true); loadProjects(); }} style={{
+              padding: "7px 12px", background: "#1a1a2e", border: "none",
+              color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
+            }}>📁 Projets</button>
             <button onClick={() => setPreview(!preview)} style={{
-              padding: "7px 14px", background: preview ? "#c0392b" : "#f0f2f5",
+              padding: "7px 12px", background: preview ? "#c0392b" : "#f0f2f5",
               border: "1px solid #e2e8f0", color: preview ? "white" : "#64748b",
-              fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "1px",
+              fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
             }}>{preview ? "✏️ Éditer" : "👁 Aperçu"}</button>
-            <button onClick={save} disabled={saving} style={{
-              padding: "7px 14px", background: "#c0392b", border: "none",
-              color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "1px",
-            }}>{saving ? "..." : "💾 Sauvegarder"}</button>
+            <button onClick={() => saveProject()} style={{
+              padding: "7px 12px", background: "#2563eb", border: "none",
+              color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
+            }}>💾 Sauvegarder</button>
+            <button onClick={exportPNG} style={{
+              padding: "7px 12px", background: "#16a34a", border: "none",
+              color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
+            }}>⬇️ Export PNG</button>
             <a href="/" style={{ fontSize: "10px", color: "#94a3b8", letterSpacing: "1px", textDecoration: "none" }}>← Retour</a>
           </div>
         </div>
@@ -1077,7 +1328,15 @@ export default function StudioPage() {
                 onTextChange={(t) => setBubbles((prev) => prev.map((b) => b.id === bubble.id ? { ...b, text: t } : b))}
                 onStopEdit={() => setEditingBubble(null)}
                 onDelete={() => { deleteBubble(bubble.id); setSelectedBubble(null); }}
-                onResize={(dw, dh) => setBubbles((prev) => prev.map((b) => b.id === bubble.id ? { ...b, width: Math.max(80, b.width + dw), height: Math.max(60, b.height + dh) } : b))}
+                onResize={(dw, dh, anchor) => setBubbles((prev) => prev.map((b) => {
+                  if (b.id !== bubble.id) return b;
+                  let { x, y, width, height } = b;
+                  if (anchor.includes("e")) width = Math.max(80, width + dw);
+                  if (anchor.includes("w")) { width = Math.max(80, width - dw); x += dw; }
+                  if (anchor.includes("s")) height = Math.max(60, height + dh);
+                  if (anchor.includes("n")) { height = Math.max(60, height - dh); y += dh; }
+                  return { ...b, x, y, width, height };
+                }))}
               />
             ))}
 
@@ -1104,7 +1363,7 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
   bubble: Bubble; selected: boolean; editing: boolean;
   onSelect: () => void; onDrag: (dx: number, dy: number) => void;
   onEdit: () => void; onTextChange: (t: string) => void;
-  onStopEdit: () => void; onDelete: () => void; onResize: (dw: number, dh: number) => void;
+  onStopEdit: () => void; onDelete: () => void; onResize: (dw: number, dh: number, anchor: string) => void;
 }) {
   const dragStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -1122,24 +1381,67 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
     window.addEventListener("mouseup", up);
   };
 
-  const handleResizeDown = (e: React.MouseEvent) => {
+  const makeResizeHandler = (anchor: string) => (e: React.MouseEvent) => {
     e.stopPropagation();
     const start = { x: e.clientX, y: e.clientY };
-    const move = (ev: MouseEvent) => onResize(ev.clientX - start.x, ev.clientY - start.y);
+    const move = (ev: MouseEvent) => {
+      onResize(ev.clientX - start.x, ev.clientY - start.y, anchor);
+      start.x = ev.clientX;
+      start.y = ev.clientY;
+    };
     const up = () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
   };
 
+  // 8 poignées de resize
+  const handleStyle = (cursor: string, top: string | number, left: string | number, transform?: string): React.CSSProperties => ({
+    position: "absolute", width: 10, height: 10,
+    background: "#fff", border: "2px solid #c0392b", borderRadius: "2px",
+    cursor, zIndex: 40,
+    top, left, transform: transform || "none",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
+  });
+
   return (
     <div onMouseDown={handleMouseDown} onDoubleClick={(e) => { e.stopPropagation(); onEdit(); }}
-      style={{ position: "absolute", left: bubble.x, top: bubble.y, width: bubble.width, height: bubble.height, cursor: "move", userSelect: "none", outline: selected ? "2px dashed #c0392b" : "none", zIndex: 10, overflow: "visible" }}>
+      style={{
+        position: "absolute", left: bubble.x, top: bubble.y,
+        width: bubble.width,
+        // narration/caption : hauteur auto pour s'adapter au texte
+        height: (bubble.shape === "narration" || bubble.shape === "caption") && !editing ? "auto" : bubble.height,
+        minHeight: bubble.height,
+        cursor: "move", userSelect: "none",
+        outline: selected ? "2px dashed #c0392b" : "none",
+        zIndex: 10, overflow: "visible",
+      }}>
 
       {editing ? (
-        <textarea autoFocus value={bubble.text} onChange={(e) => onTextChange(e.target.value)} onBlur={onStopEdit}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.85)", color: "white", border: "none", fontSize: `${bubble.fontSize}px`, textAlign: "center", padding: "8px", resize: "none", zIndex: 20, borderRadius: "4px" }} />
+        <div
+          contentEditable suppressContentEditableWarning
+          onBlur={(e) => { onTextChange(e.currentTarget.innerText); onStopEdit(); }}
+          onInput={(e) => onTextChange((e.target as HTMLDivElement).innerText)}
+          ref={(el) => { if (el) { el.focus(); const range = document.createRange(); range.selectNodeContents(el); range.collapse(false); const sel = window.getSelection(); sel?.removeAllRanges(); sel?.addRange(range); } }}
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            background: "rgba(0,0,0,0.88)", color: "white", border: "2px dashed rgba(192,57,43,0.7)",
+            fontSize: `${bubble.fontSize}px`, textAlign: bubble.textAlign ?? "center",
+            padding: "10px 14px", zIndex: 20, borderRadius: "4px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: (bubble.shape === "narration" || bubble.shape === "caption")
+              ? "var(--font-nunito, 'Nunito', Georgia, serif)"
+              : "var(--font-oswald, 'Oswald', sans-serif)",
+            fontWeight: 700,
+            fontStyle: (bubble.shape === "narration" || bubble.shape === "caption") ? "italic" : "normal",
+            textTransform: (bubble.shape === "narration" || bubble.shape === "caption") ? "none" : "uppercase",
+            letterSpacing: (bubble.shape === "narration" || bubble.shape === "caption") ? "0.3px" : "1px",
+            lineHeight: (bubble.shape === "narration" || bubble.shape === "caption") ? 1.5 : 1.3,
+            outline: "none", cursor: "text", whiteSpace: "pre-wrap", wordBreak: "break-word",
+            boxSizing: "border-box",
+          }}
+        >{bubble.text}</div>
       ) : (
-        <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} />
+        <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} textAlign={bubble.textAlign ?? "center"} />
       )}
 
       {/* Barre d'actions flottante au-dessus de la bulle */}
@@ -1154,20 +1456,28 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
           <button onClick={(e) => { e.stopPropagation(); onEdit(); }}
             style={{ padding: "4px 8px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: "10px", cursor: "pointer", borderRadius: "3px", fontWeight: 600 }}
             title="Double-clic pour éditer">
-            ✏️
+            ✏️ Éditer
           </button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
             style={{ padding: "4px 10px", background: "#c0392b", border: "none", color: "white", fontSize: "11px", fontWeight: 700, cursor: "pointer", borderRadius: "3px", letterSpacing: "0.5px" }}>
-            🗑 Suppr.
+            🗑
           </button>
-          {/* Poignée de resize */}
-          <div onMouseDown={(e) => { e.stopPropagation(); handleResizeDown(e); }}
-            style={{ padding: "4px 8px", background: "rgba(255,255,255,0.1)", color: "#aaa", fontSize: "11px", cursor: "se-resize", borderRadius: "3px", display: "flex", alignItems: "center" }}
-            title="Redimensionner">
-            ↔
-          </div>
         </div>
       )}
+
+      {/* 8 poignées de resize */}
+      {selected && !editing && (<>
+        {/* Coins */}
+        <div onMouseDown={makeResizeHandler("nw")} style={handleStyle("nw-resize", -5, -5)} />
+        <div onMouseDown={makeResizeHandler("ne")} style={handleStyle("ne-resize", -5, "100%", "translateX(-5px)")} />
+        <div onMouseDown={makeResizeHandler("sw")} style={handleStyle("sw-resize", "100%", -5, "translateY(-5px)")} />
+        <div onMouseDown={makeResizeHandler("se")} style={handleStyle("se-resize", "100%", "100%", "translate(-5px,-5px)")} />
+        {/* Milieux */}
+        <div onMouseDown={makeResizeHandler("n")} style={handleStyle("n-resize", -5, "50%", "translateX(-5px)")} />
+        <div onMouseDown={makeResizeHandler("s")} style={handleStyle("s-resize", "100%", "50%", "translate(-5px,-5px)")} />
+        <div onMouseDown={makeResizeHandler("w")} style={handleStyle("w-resize", "50%", -5, "translateY(-5px)")} />
+        <div onMouseDown={makeResizeHandler("e")} style={handleStyle("e-resize", "50%", "100%", "translate(-5px,-5px)")} />
+      </>)}
     </div>
   );
 }
