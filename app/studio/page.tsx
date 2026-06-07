@@ -1404,11 +1404,28 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
   });
 
   return (
-    <div onMouseDown={handleMouseDown} onDoubleClick={(e) => { e.stopPropagation(); onEdit(); }}
+    <div
+      onMouseDown={handleMouseDown}
+      onDoubleClick={(e) => { e.stopPropagation(); onEdit(); }}
+      onWheel={selected ? (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Mollette : resize par pas de 4px (peu sensible)
+        const delta = e.deltaY > 0 ? -4 : 4;
+        if (e.shiftKey) {
+          // Shift + mollette = hauteur seulement
+          onResize(0, -delta, "s");
+        } else if (e.ctrlKey || e.metaKey) {
+          // Ctrl + mollette = largeur seulement
+          onResize(-delta, 0, "e");
+        } else {
+          // Mollette seule = les deux (proportionnel)
+          onResize(-delta, -delta * 0.6, "se");
+        }
+      } : undefined}
       style={{
         position: "absolute", left: bubble.x, top: bubble.y,
         width: bubble.width,
-        // narration/caption : hauteur auto pour s'adapter au texte
         height: (bubble.shape === "narration" || bubble.shape === "caption") && !editing ? "auto" : bubble.height,
         minHeight: bubble.height,
         cursor: "move", userSelect: "none",
