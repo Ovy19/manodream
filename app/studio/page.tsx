@@ -1426,8 +1426,7 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
       style={{
         position: "absolute", left: bubble.x, top: bubble.y,
         width: bubble.width,
-        height: (bubble.shape === "narration" || bubble.shape === "caption") && !editing ? "auto" : bubble.height,
-        minHeight: bubble.height,
+        height: bubble.height,
         cursor: "move", userSelect: "none",
         outline: selected ? "2px dashed #c0392b" : "none",
         zIndex: 10, overflow: "visible",
@@ -1484,24 +1483,15 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
 
       {/* 8 poignées de resize */}
       {selected && !editing && (<>
-        {/* Coins petits */}
-        <div onMouseDown={makeResizeHandler("nw")} style={handleStyle("nw-resize", -5, -5)} />
-        <div onMouseDown={makeResizeHandler("ne")} style={handleStyle("ne-resize", -5, "100%", "translateX(-5px)")} />
-        <div onMouseDown={makeResizeHandler("sw")} style={handleStyle("sw-resize", "100%", -5, "translateY(-5px)")} />
-        {/* Milieux */}
-        <div onMouseDown={makeResizeHandler("n")} style={handleStyle("n-resize", -5, "50%", "translateX(-5px)")} />
-        <div onMouseDown={makeResizeHandler("s")} style={handleStyle("s-resize", "100%", "50%", "translate(-5px,-5px)")} />
-        <div onMouseDown={makeResizeHandler("w")} style={handleStyle("w-resize", "50%", -5, "translateY(-5px)")} />
-        <div onMouseDown={makeResizeHandler("e")} style={handleStyle("e-resize", "50%", "100%", "translate(-5px,-5px)")} />
-        {/* Poignée principale SE — grande flèche diagonale */}
+        {/* Poignée unique — coin bas droite, glisser pour redimensionner */}
         <div onMouseDown={makeResizeHandler("se")} style={{
-          position: "absolute", width: 22, height: 22,
-          background: "#c0392b", borderRadius: "4px",
+          position: "absolute", width: 26, height: 26,
+          background: "#c0392b", borderRadius: "5px",
           cursor: "se-resize", zIndex: 40,
-          top: "100%", left: "100%", transform: "translate(-11px,-11px)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+          bottom: -13, right: -13,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.4)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "13px", color: "white", userSelect: "none",
+          fontSize: "15px", color: "white", userSelect: "none",
         }}>↘</div>
       </>)}
     </div>
