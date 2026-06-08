@@ -114,7 +114,7 @@ const BUBBLE_SHAPES: { shape: BubbleShape; label: string; icon: string }[] = [
   { shape: "explosion", label: "Explosive", icon: "💥" },
   { shape: "shout2", label: "Cri ondulé", icon: "🌊" },
   { shape: "thought", label: "Pensée", icon: "💭" },
-  { shape: "whisper", label: "Murmure", icon: "🫧" },
+  { shape: "whisper", label: "Impact", icon: "🌟" },
   { shape: "cloud", label: "Nuage", icon: "☁️" },
   { shape: "shout", label: "Cri étoile", icon: "📢" },
   { shape: "narration", label: "Narration", icon: "📋" },
@@ -303,21 +303,25 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
   );
 
   // 💭 PENSÉE — pointillés, queue en bulles
-  // 🫧 MURMURE — double oval, pensée intérieure non dite
+  // 🫧 IMPACT — oval blanc avec traits rayonnants style Solo Leveling
   if (shape === "whisper") return (
-    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {filters}
-      {/* Ombre */}
-      <ellipse cx="102" cy="56" rx="92" ry="44" fill="rgba(0,0,0,0.1)"/>
-      {/* Double contour oval */}
-      <ellipse cx="100" cy="54" rx="92" ry="44" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      <ellipse cx="100" cy="54" rx="80" ry="34" fill="none" stroke={stroke} strokeWidth="1.5" strokeDasharray="none"/>
-      {/* Petits ronds queue */}
-      <circle cx="68" cy="100" r="7" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <circle cx="55" cy="113" r="4.5" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <circle cx="45" cy="124" r="3" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <foreignObject x="22" y="18" width="156" height="72">
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 600, color, textAlign, lineHeight: 1.3, fontStyle: "italic", textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+    <svg viewBox="0 0 200 160" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {/* Traits rayonnants — générés autour du centre */}
+      {Array.from({ length: 72 }).map((_, i) => {
+        const angle = (i / 72) * Math.PI * 2;
+        const innerR = 58 + Math.random() * 8;
+        const outerR = 82 + Math.random() * 22;
+        const x1 = 100 + Math.cos(angle) * innerR;
+        const y1 = 80 + Math.sin(angle) * innerR * 0.72;
+        const x2 = 100 + Math.cos(angle) * outerR;
+        const y2 = 80 + Math.sin(angle) * outerR * 0.72;
+        const w = 0.4 + Math.random() * 1.2;
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={stroke} strokeWidth={w} opacity={0.7 + Math.random() * 0.3}/>;
+      })}
+      {/* Oval blanc principal */}
+      <ellipse cx="100" cy="80" rx="60" ry="44" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <foreignObject x="20" y="38" width="160" height="84">
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 700, color, textAlign, lineHeight: 1.3, textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
