@@ -1201,42 +1201,75 @@ export default function StudioPage() {
           </div>
         </div>
 
-        {/* MODE PREVIEW */}
+        {/* MODE PREVIEW — overlay plein écran sur le canvas */}
         {preview && (
-          <div style={{ width: "100%", maxWidth: "420px", background: "#fff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 16px 48px rgba(0,0,0,0.15)", marginBottom: "32px" }}>
-            <div style={{ padding: "10px 16px", background: "#f8f8f8", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "13px", letterSpacing: "3px", color: "#333" }}>APERÇU WEBTOON</span>
-              <span style={{ fontSize: "9px", color: "#aaa", letterSpacing: "1px" }}>MOBILE · 800px</span>
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            background: "rgba(0,0,0,0.92)",
+            display: "flex", flexDirection: "column", alignItems: "center",
+            overflowY: "auto",
+          }}>
+            {/* Barre du haut */}
+            <div style={{
+              position: "sticky", top: 0, zIndex: 10, width: "100%",
+              background: "rgba(0,0,0,0.95)", borderBottom: "1px solid #222",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "10px 20px",
+            }}>
+              <span style={{ fontFamily: "var(--font-bebas,'Bebas Neue',sans-serif)", fontSize: "14px", letterSpacing: "3px", color: "#fff" }}>
+                APERÇU — {titre}
+              </span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button onClick={exportPNG} style={{ padding: "6px 14px", background: "#16a34a", border: "none", color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px" }}>⬇️ Export PNG</button>
+                <button onClick={() => setPreview(false)} style={{ padding: "6px 14px", background: "#c0392b", border: "none", color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px" }}>✕ Fermer</button>
+              </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", background: "#fff" }}>
-              {blocks.map((block) => {
-                if (block.type === "respiration") {
-                  const r = block.data as Respiration;
-                  return <div key={r.id} style={{ width: "100%", height: `${Math.round(r.height * 0.5)}px`, background: r.color }} />;
-                }
-                const p = block.data as WebtoonPanel;
-                if (p.split) {
-                  return (
+            {/* Canvas en lecture seule — pointer-events none */}
+            <div style={{ width: "800px", maxWidth: "100vw", marginTop: "20px", marginBottom: "40px" }}>
+              <div ref={canvasRef} style={{ width: "100%", background: "#fff", position: "relative", pointerEvents: "none" }}>
+                {blocks.map((block) => {
+                  if (block.type === "respiration") {
+                    const r = block.data as Respiration;
+                    return <div key={r.id} style={{ width: "100%", height: r.height, background: r.color }} />;
+                  }
+                  const p = block.data as WebtoonPanel;
+                  if (p.split) return (
                     <div key={p.id} style={{ display: "flex", gap: "2px", width: "100%" }}>
                       {p.split.map((sp: WebtoonPanel) => (
-                        <div key={sp.id} style={{
-                          flex: 1, height: `${Math.round(p.height * 0.5)}px`,
-                          background: sp.image ? `url(${sp.image}) center/cover` : "#e0e0e0",
-                        }} />
+                        <div key={sp.id} style={{ flex: 1, height: p.height, background: "#e0e0e0", border: sp.border ? `${sp.borderSize||3}px solid #111` : "none", overflow: "hidden" }}>
+                          {sp.image && <img src={sp.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+                        </div>
                       ))}
                     </div>
                   );
-                }
-                const w = widthPct(p.width);
-                const m = p.align === "left" ? "0 auto 0 0" : p.align === "right" ? "0 0 0 auto" : "0 auto";
-                return (
-                  <div key={p.id} style={{
-                    width: w, margin: m,
-                    height: `${Math.round(p.height * 0.5)}px`,
-                    background: p.image ? `url(${p.image}) center/cover` : "#e0e0e0",
-                  }} />
-                );
-              })}
+                  const w = widthPct(p.width);
+                  const m = p.align === "left" ? "0 auto 0 0" : p.align === "right" ? "0 0 0 auto" : "0 auto";
+                  return (
+                    <div key={p.id} style={{ width: w, margin: m, height: p.height, background: "#e0e0e0", border: p.border ? `${p.borderSize||3}px solid #111` : "none", position: "relative", overflow: "hidden" }}>
+                      {p.image && <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+                    </div>
+                  );
+                })}
+                {/* Bulles */}
+                {bubbles.map(bubble => (
+                  <div key={bubble.id} style={{ position: "absolute", left: bubble.x, top: bubble.y, width: bubble.width, height: bubble.height, pointerEvents: "none" }}>
+                    <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} textAlign={bubble.textAlign ?? "center"} />
+                  </div>
+                ))}
+                {/* SFX */}
+                {sfxList.map(sfx => {
+                  const gradId = `prev-sfx-${sfx.id}`;
+                  return (
+                    <div key={sfx.id} style={{ position: "absolute", left: sfx.x, top: sfx.y, transform: `rotate(${sfx.rotation}deg)`, transformOrigin: "center", pointerEvents: "none" }}>
+                      <svg style={{ overflow: "visible" }} viewBox={`0 0 ${sfx.text.length * sfx.fontSize * 0.65} ${sfx.fontSize * 1.3}`} width={sfx.text.length * sfx.fontSize * 0.65} height={sfx.fontSize * 1.3}>
+                        <defs><linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={sfx.color1}/><stop offset="100%" stopColor={sfx.color2}/></linearGradient></defs>
+                        <text x="50%" y="85%" textAnchor="middle" fontFamily="var(--font-bangers,'Bangers',sans-serif)" fontSize={sfx.fontSize} fontWeight="400" stroke={sfx.strokeColor} strokeWidth="4" strokeLinejoin="round" paintOrder="stroke">{sfx.text}</text>
+                        <text x="50%" y="85%" textAnchor="middle" fontFamily="var(--font-bangers,'Bangers',sans-serif)" fontSize={sfx.fontSize} fontWeight="400" fill={`url(#${gradId})`}>{sfx.text}</text>
+                      </svg>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
