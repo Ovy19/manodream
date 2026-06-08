@@ -202,7 +202,7 @@ export default function LecteurPage({ params }: { params: Promise<{ chapitre: st
         .reader-nav-btn:hover { border-color: #c0392b; color: #c0392b; }
         .reader-nav-btn.disabled { opacity: 0.3; pointer-events: none; }
         .reader-content { padding-top: 50px; background: #fff; min-height: 100vh; }
-        .panels-wrap { max-width: 720px; margin: 0 auto; background: #fff; }
+        .panels-wrap { width: 720px; max-width: 100%; margin: 0 auto; background: #fff; }
         .panel-item { width: 100%; display: block; line-height: 0; }
         .panel-item img { width: 100%; display: block; }
         .ep-end { padding: 60px 24px 80px; text-align: center; background: #fff; border-top: 1px solid #f0f0f0; }
