@@ -1197,6 +1197,14 @@ export default function StudioPage() {
               padding: "7px 12px", background: "#16a34a", border: "none",
               color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
             }}>⬇️ Export PNG</button>
+            <button onClick={() => {
+              localStorage.setItem("manodream_episode_1", JSON.stringify({ blocks, bubbles, sfxList, titre, publishedAt: new Date().toISOString() }));
+              setSaveMsg("🚀 Publié dans l'épisode 1 !");
+              setTimeout(() => setSaveMsg(""), 3000);
+            }} style={{
+              padding: "7px 12px", background: "#7c3aed", border: "none",
+              color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
+            }}>🚀 Publier Ep.1</button>
             <a href="/" style={{ fontSize: "10px", color: "#94a3b8", letterSpacing: "1px", textDecoration: "none" }}>← Retour</a>
           </div>
         </div>
