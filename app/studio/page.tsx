@@ -768,10 +768,18 @@ export default function StudioPage() {
   };
 
   // Bulle
+  const getScrollY = () => {
+    if (!canvasRef.current) return 80;
+    const rect = canvasRef.current.getBoundingClientRect();
+    // Position visible du canvas dans la fenêtre → Y relatif au canvas
+    const scrolled = Math.max(0, -rect.top + 80);
+    return Math.round(scrolled);
+  };
+
   const addBubble = () => {
     const b: Bubble = {
       id: uid(), shape: bubbleShape, text: bubbleText,
-      x: 80, y: 80, width: 160, height: 100,
+      x: 80, y: getScrollY(), width: 160, height: 100,
       fontSize: bubbleFontSize, color: bubbleColor, bgColor: bubbleBg,
     };
     setBubbles((prev) => [...prev, b]);
@@ -787,7 +795,7 @@ export default function StudioPage() {
   const addSfx = () => {
     const s: SFX = {
       id: uid(), text: sfxText.toUpperCase(),
-      x: 100, y: 80,
+      x: 100, y: getScrollY(),
       fontSize: sfxSize,
       color1: sfxColor1, color2: sfxColor2,
       strokeColor: sfxStroke,
