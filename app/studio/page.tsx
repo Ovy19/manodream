@@ -16,7 +16,7 @@ interface Project {
 }
 
 // ── TYPES ──
-type BubbleShape = "round" | "rect" | "explosion" | "thought" | "shout" | "narration" | "caption";
+type BubbleShape = "round" | "rect" | "explosion" | "thought" | "shout" | "narration" | "caption" | "whisper" | "cloud" | "shout2";
 
 type PanelWidth = "full" | "wide" | "medium" | "small";   // % de la largeur du canvas
 type PanelAlign = "left" | "center" | "right";
@@ -112,8 +112,11 @@ const BUBBLE_SHAPES: { shape: BubbleShape; label: string; icon: string }[] = [
   { shape: "round", label: "Ronde", icon: "💬" },
   { shape: "rect", label: "Rectangle", icon: "🗨️" },
   { shape: "explosion", label: "Explosive", icon: "💥" },
+  { shape: "shout2", label: "Cri ondulé", icon: "🌊" },
   { shape: "thought", label: "Pensée", icon: "💭" },
-  { shape: "shout", label: "Cri", icon: "📢" },
+  { shape: "whisper", label: "Murmure", icon: "🫧" },
+  { shape: "cloud", label: "Nuage", icon: "☁️" },
+  { shape: "shout", label: "Cri étoile", icon: "📢" },
   { shape: "narration", label: "Narration", icon: "📋" },
   { shape: "caption", label: "Caption", icon: "🎬" },
 ];
@@ -300,6 +303,64 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
   );
 
   // 💭 PENSÉE — pointillés, queue en bulles
+  // 🫧 MURMURE — double oval, pensée intérieure non dite
+  if (shape === "whisper") return (
+    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      {/* Ombre */}
+      <ellipse cx="102" cy="56" rx="92" ry="44" fill="rgba(0,0,0,0.1)"/>
+      {/* Double contour oval */}
+      <ellipse cx="100" cy="54" rx="92" ry="44" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      <ellipse cx="100" cy="54" rx="80" ry="34" fill="none" stroke={stroke} strokeWidth="1.5" strokeDasharray="none"/>
+      {/* Petits ronds queue */}
+      <circle cx="68" cy="100" r="7" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <circle cx="55" cy="113" r="4.5" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <circle cx="45" cy="124" r="3" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <foreignObject x="22" y="18" width="156" height="72">
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 600, color, textAlign, lineHeight: 1.3, fontStyle: "italic", textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+      </foreignObject>
+    </svg>
+  );
+
+  // ☁️ NUAGE — pensée en nuage (bulles rondes)
+  if (shape === "cloud") return (
+    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      <g filter={`url(#${fid})`}>
+        <circle cx="50" cy="70" r="30" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="80" cy="50" r="34" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="120" cy="45" r="36" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="155" cy="62" r="30" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="140" cy="82" r="26" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        <circle cx="60" cy="85" r="25" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+        {/* Remplir le centre */}
+        <rect x="50" y="50" width="110" height="45" fill={bgColor}/>
+      </g>
+      {/* Queue nuage */}
+      <circle cx="62" cy="110" r="8" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <circle cx="52" cy="121" r="5" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <circle cx="44" cy="129" r="3.5" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <foreignObject x="50" y="40" width="105" height="55">
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 600, color, textAlign, lineHeight: 1.3, fontStyle: "italic", textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+      </foreignObject>
+    </svg>
+  );
+
+  // 🌊 CRI ONDULÉ — bords vagues style manga
+  if (shape === "shout2") return (
+    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      {filters}
+      <g filter={`url(#${fid})`}>
+        <path d="M 10,30 Q 20,10 35,25 Q 45,5 60,22 Q 75,5 90,20 Q 105,2 120,18 Q 135,5 150,20 Q 165,5 180,22 Q 195,15 195,35 Q 200,50 190,65 Q 200,80 190,95 Q 195,110 180,108 Q 165,125 150,108 Q 135,125 120,110 Q 105,128 90,112 Q 75,128 60,112 Q 45,128 30,112 Q 15,125 8,108 Q 0,95 10,80 Q 0,65 10,50 Q 0,35 10,30 Z"
+          fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+        <path d="M 82,108 L 68,128 L 95,110 Z" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      </g>
+      <foreignObject x="18" y="18" width="164" height="78">
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: mangaFont, fontSize: `${fontSize}px`, fontWeight: 700, color, textAlign, lineHeight: 1.2, textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+      </foreignObject>
+    </svg>
+  );
+
   if (shape === "thought") return (
     <svg viewBox="0 0 200 138" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
