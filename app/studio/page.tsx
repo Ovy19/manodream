@@ -1172,7 +1172,7 @@ export default function StudioPage() {
       </div>
 
       {/* ── ZONE CENTRALE ── */}
-      <div style={{ marginLeft: "230px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 24px 100px", background: "#f0f2f5" }}>
+      <div style={{ marginLeft: "230px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0 100px", background: "#f0f2f5", overflowX: "hidden" }}>
 
         {/* Barre du haut */}
         <div style={{ width: "100%", maxWidth: "800px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
