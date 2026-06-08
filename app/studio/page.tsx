@@ -1175,7 +1175,7 @@ export default function StudioPage() {
       <div style={{ marginLeft: "230px", flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 24px 100px", background: "#f0f2f5" }}>
 
         {/* Barre du haut */}
-        <div style={{ width: "100%", maxWidth: "720px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ width: "100%", maxWidth: "800px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <input value={titre} onChange={(e) => setTitre(e.target.value)}
             style={{ fontFamily: "var(--font-bebas, 'Bebas Neue', sans-serif)", fontSize: "22px", letterSpacing: "3px", color: "#1a1a2e", border: "none", background: "transparent", outline: "none", flex: 1, minWidth: "120px" }} />
           <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
@@ -1233,7 +1233,7 @@ export default function StudioPage() {
               </div>
             </div>
             {/* Canvas en lecture seule — pointer-events none */}
-            <div style={{ width: "720px", maxWidth: "100vw", marginTop: "20px", marginBottom: "40px" }}>
+            <div style={{ width: "800px", maxWidth: "100vw", marginTop: "20px", marginBottom: "40px" }}>
               <div ref={canvasRef} style={{ width: "100%", background: "#fff", position: "relative", pointerEvents: "none" }}>
                 {blocks.map((block) => {
                   if (block.type === "respiration") {
@@ -1285,7 +1285,7 @@ export default function StudioPage() {
         {/* Canvas principal */}
         {blocks.length === 0 && !preview && (
           <div style={{
-            width: "100%", maxWidth: "720px", height: "280px",
+            width: "100%", maxWidth: "800px", height: "280px",
             border: "2px dashed #d0d0d0", borderRadius: "8px",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             gap: "12px", color: "#bbb", background: "#fff",
@@ -1294,12 +1294,12 @@ export default function StudioPage() {
             <div style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase" }}>
               Ajoute un panel ou génère un épisode
             </div>
-            <div style={{ fontSize: "10px", color: "#ddd" }}>Format webtoon · 720px · scroll vertical</div>
+            <div style={{ fontSize: "10px", color: "#ddd" }}>Format webtoon · 800px · scroll vertical</div>
           </div>
         )}
 
         {!preview && (
-          <div ref={canvasRef} style={{ width: "100%", maxWidth: "720px", background: "#fff", position: "relative", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+          <div ref={canvasRef} style={{ width: "100%", maxWidth: "800px", background: "#fff", position: "relative", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
             {blocks.map((block) => {
               if (block.type === "respiration") {
                 const r = block.data as Respiration;
