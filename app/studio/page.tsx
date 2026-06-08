@@ -27,8 +27,9 @@ interface WebtoonPanel {
   height: number;       // px
   width: PanelWidth;
   align: PanelAlign;
-  border?: boolean;     // bordure noire manga
+  border?: boolean;     // bordure noire manga (legacy)
   borderSize?: number;  // épaisseur px
+  borderTop?: boolean; borderBottom?: boolean; borderLeft?: boolean; borderRight?: boolean;
   split?: WebtoonPanel[];
 }
 
@@ -72,7 +73,8 @@ const PANEL_HEIGHTS = [
   { label: "Moyen", h: 320, icon: "▬" },
   { label: "Grand", h: 480, icon: "▮" },
   { label: "Pleine page", h: 680, icon: "⬛" },
-  { label: "Cinéma", h: 240, icon: "🎬" },
+  { label: "Cinéma ×1.5", h: 960, icon: "🎬" },
+  { label: "Épique ×2", h: 1280, icon: "🌟" },
 ];
 
 const PANEL_WIDTHS: { label: string; val: PanelWidth; pct: string }[] = [
@@ -348,12 +350,13 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
 }
 
 // ── PANEL COMPOSANT ──
-function PanelComp({ panel, selected, onClick, onImageDrop, onDelete }: {
+function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: {
   panel: WebtoonPanel;
   selected: boolean;
   onClick: () => void;
   onImageDrop: (id: string, src: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -384,11 +387,10 @@ function PanelComp({ panel, selected, onClick, onImageDrop, onDelete }: {
       <div style={{
         width: "100%", height: `${panel.height}px`,
         background: panel.image ? `url(${panel.image}) center/cover no-repeat` : "#ebebeb",
-        border: selected
-          ? "2px solid #c0392b"
-          : panel.border
-          ? `${panel.borderSize || 3}px solid #111`
-          : "1px solid #d0d0d0",
+        borderTop: selected ? "2px solid #c0392b" : panel.borderSize ? (panel.borderTop !== false ? `${panel.borderSize}px solid #111` : "none") : "1px solid #d0d0d0",
+        borderBottom: selected ? "2px solid #c0392b" : panel.borderSize ? (panel.borderBottom !== false ? `${panel.borderSize}px solid #111` : "none") : "1px solid #d0d0d0",
+        borderLeft: selected ? "2px solid #c0392b" : panel.borderSize ? (panel.borderLeft !== false ? `${panel.borderSize}px solid #111` : "none") : "1px solid #d0d0d0",
+        borderRight: selected ? "2px solid #c0392b" : panel.borderSize ? (panel.borderRight !== false ? `${panel.borderSize}px solid #111` : "none") : "1px solid #d0d0d0",
         cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
         flexDirection: "column", gap: "8px",
@@ -404,14 +406,18 @@ function PanelComp({ panel, selected, onClick, onImageDrop, onDelete }: {
         )}
         {selected && (
           <div style={{ position: "absolute", inset: 0, background: "rgba(192,57,43,0.08)", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: "8px", paddingBottom: "12px" }}>
+            <button onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
+              style={{ padding: "6px 12px", background: "#2563eb", color: "white", border: "none", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "3px" }}>
+              ✏️ Modifier
+            </button>
             <button onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
               style={{ padding: "6px 14px", background: "#c0392b", color: "white", border: "none", fontSize: "10px", fontWeight: 700, letterSpacing: "1px", cursor: "pointer", borderRadius: "3px" }}>
-              📂 Choisir image
+              📂 Image
             </button>
             {panel.image && (
               <button onClick={(e) => { e.stopPropagation(); onImageDrop(panel.id, ""); }}
                 style={{ padding: "6px 10px", background: "rgba(0,0,0,0.7)", color: "white", border: "none", fontSize: "10px", cursor: "pointer", borderRadius: "3px" }}>
-                ✕ Retirer
+                ✕
               </button>
             )}
             <button onClick={(e) => { e.stopPropagation(); onDelete(panel.id); }}
@@ -517,6 +523,10 @@ export default function StudioPage() {
   const [panelAlign, setPanelAlign] = useState<PanelAlign>("center");
   const [panelBorder, setPanelBorder] = useState(true);
   const [panelBorderSize, setPanelBorderSize] = useState(3);
+  const [panelBorderTop, setPanelBorderTop] = useState(true);
+  const [panelBorderBottom, setPanelBorderBottom] = useState(true);
+  const [panelBorderLeft, setPanelBorderLeft] = useState(true);
+  const [panelBorderRight, setPanelBorderRight] = useState(true);
 
   // Respiration controls
   const [respColor, setRespColor] = useState("#ffffff");
@@ -646,23 +656,56 @@ export default function StudioPage() {
     setTimeout(() => setSaveMsg(""), 3000);
   }, [blocks, bubbles, titre, episodeId]);
 
+  const makePanelData = (id?: string): WebtoonPanel => ({
+    id: id || uid(), height: panelHeight, width: panelWidth, align: panelAlign,
+    border: panelBorder, borderSize: panelBorderSize,
+    borderTop: panelBorderTop, borderBottom: panelBorderBottom,
+    borderLeft: panelBorderLeft, borderRight: panelBorderRight,
+  });
+
   // Ajouter panel simple
   const addPanel = () => {
-    const p: WebtoonPanel = { id: uid(), height: panelHeight, width: panelWidth, align: panelAlign, border: panelBorder, borderSize: panelBorderSize };
-    setBlocks((b) => [...b, { type: "panel", data: p }]);
+    setBlocks((b) => [...b, { type: "panel", data: makePanelData() }]);
   };
 
   // Ajouter split (2 panels côte à côte)
   const addSplit = () => {
     const sp: WebtoonPanel = {
-      id: uid(), height: panelHeight, width: "full", align: "center",
-      border: panelBorder, borderSize: panelBorderSize,
-      split: [
-        { id: uid(), height: panelHeight, width: "full", align: "center", border: panelBorder, borderSize: panelBorderSize },
-        { id: uid(), height: panelHeight, width: "full", align: "center", border: panelBorder, borderSize: panelBorderSize },
-      ],
+      ...makePanelData(), width: "full", align: "center",
+      split: [makePanelData(), makePanelData()],
     };
     setBlocks((b) => [...b, { type: "panel", data: sp }]);
+  };
+
+  // ── Charger les props d'un block existant dans la sidebar pour édition ──
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+
+  const loadBlockToSidebar = (block: Block) => {
+    if (block.type === "respiration") {
+      const r = block.data as Respiration;
+      setRespColor(r.color); setRespHeight(r.height);
+      setEditingBlockId(r.id);
+    } else {
+      const p = block.data as WebtoonPanel;
+      setPanelHeight(p.height); setPanelWidth(p.width); setPanelAlign(p.align);
+      setPanelBorder(p.border ?? false); setPanelBorderSize(p.borderSize ?? 3);
+      setPanelBorderTop(p.borderTop ?? p.border ?? false);
+      setPanelBorderBottom(p.borderBottom ?? p.border ?? false);
+      setPanelBorderLeft(p.borderLeft ?? p.border ?? false);
+      setPanelBorderRight(p.borderRight ?? p.border ?? false);
+      setEditingBlockId(p.id);
+    }
+  };
+
+  const applyBlockEdit = () => {
+    if (!editingBlockId) return;
+    setBlocks(prev => prev.map(b => {
+      const id = (b.data as WebtoonPanel).id || (b.data as Respiration).id;
+      if (id !== editingBlockId) return b;
+      if (b.type === "respiration") return { ...b, data: { ...b.data, color: respColor, height: respHeight } };
+      return { ...b, data: { ...b.data as WebtoonPanel, height: panelHeight, width: panelWidth, align: panelAlign, border: panelBorder, borderSize: panelBorderSize, borderTop: panelBorderTop, borderBottom: panelBorderBottom, borderLeft: panelBorderLeft, borderRight: panelBorderRight } };
+    }));
+    setEditingBlockId(null);
   };
 
   // Ajouter respiration
@@ -941,43 +984,50 @@ export default function StudioPage() {
             </>
           )}
 
-          {/* Bordure manga */}
+          {/* Bordures par côté */}
           <div style={{ marginBottom: "8px" }}>
-            <div style={{ fontSize: "9px", color: "#888", letterSpacing: "1px", marginBottom: "6px" }}>BORDURE MANGA</div>
-            <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "6px" }}>
-              <button onClick={() => setPanelBorder(!panelBorder)} style={{
-                padding: "5px 12px", fontSize: "10px", fontWeight: 700,
-                background: panelBorder ? "#111" : "#f0f2f5",
-                color: panelBorder ? "#fff" : "#888",
-                border: panelBorder ? "2px solid #111" : "1px solid #ddd",
-                cursor: "pointer", borderRadius: "4px", letterSpacing: "1px",
-                transition: "all 0.15s",
-              }}>
-                {panelBorder ? "⬛ ON" : "⬜ OFF"}
-              </button>
-              {panelBorder && (
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {[2, 3, 5, 8].map((s) => (
-                    <button key={s} onClick={() => setPanelBorderSize(s)} style={{
-                      width: "28px", height: "28px", fontSize: "9px", fontWeight: 700,
-                      background: panelBorderSize === s ? "#111" : "#f8fafc",
-                      color: panelBorderSize === s ? "#fff" : "#555",
-                      border: panelBorderSize === s ? "2px solid #111" : "1px solid #ddd",
-                      cursor: "pointer", borderRadius: "3px",
-                    }}>{s}</button>
-                  ))}
-                </div>
-              )}
+            <div style={{ fontSize: "9px", color: "#888", letterSpacing: "1px", marginBottom: "6px" }}>BORDURES</div>
+            {/* Épaisseur */}
+            <div style={{ display: "flex", gap: "4px", marginBottom: "6px" }}>
+              {[0, 2, 3, 5, 8].map((s) => (
+                <button key={s} onClick={() => setPanelBorderSize(s)} style={{
+                  flex: 1, padding: "4px 2px", fontSize: "9px", fontWeight: 700,
+                  background: panelBorderSize === s ? "#111" : "#f8fafc",
+                  color: panelBorderSize === s ? "#fff" : "#555",
+                  border: panelBorderSize === s ? "2px solid #111" : "1px solid #ddd",
+                  cursor: "pointer", borderRadius: "3px",
+                }}>{s === 0 ? "OFF" : `${s}px`}</button>
+              ))}
             </div>
-            {panelBorder && (
-              <div style={{ fontSize: "8px", color: "#aaa" }}>
-                💡 Les bulles peuvent dépasser le cadre — place-les à cheval sur le bord !
+            {/* Sélecteur côtés — visuel en croix */}
+            {panelBorderSize > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr", gap: "3px", width: "90px", margin: "0 auto 6px" }}>
+                <div/>
+                <button onClick={() => setPanelBorderTop(!panelBorderTop)} style={{ height: "26px", background: panelBorderTop ? "#111" : "#f0f0f0", border: "1px solid #ccc", borderRadius: "3px", cursor: "pointer", fontSize: "9px", color: panelBorderTop ? "#fff" : "#aaa", fontWeight: 700 }}>↑</button>
+                <div/>
+                <button onClick={() => setPanelBorderLeft(!panelBorderLeft)} style={{ height: "26px", background: panelBorderLeft ? "#111" : "#f0f0f0", border: "1px solid #ccc", borderRadius: "3px", cursor: "pointer", fontSize: "9px", color: panelBorderLeft ? "#fff" : "#aaa", fontWeight: 700 }}>←</button>
+                <div style={{ background: "#e0e0e0", borderRadius: "2px" }}/>
+                <button onClick={() => setPanelBorderRight(!panelBorderRight)} style={{ height: "26px", background: panelBorderRight ? "#111" : "#f0f0f0", border: "1px solid #ccc", borderRadius: "3px", cursor: "pointer", fontSize: "9px", color: panelBorderRight ? "#fff" : "#aaa", fontWeight: 700 }}>→</button>
+                <div/>
+                <button onClick={() => setPanelBorderBottom(!panelBorderBottom)} style={{ height: "26px", background: panelBorderBottom ? "#111" : "#f0f0f0", border: "1px solid #ccc", borderRadius: "3px", cursor: "pointer", fontSize: "9px", color: panelBorderBottom ? "#fff" : "#aaa", fontWeight: 700 }}>↓</button>
+                <div/>
               </div>
             )}
           </div>
 
-          <button onClick={addPanel} style={btnBlue}>+ Panel simple</button>
-          <button onClick={addSplit} style={{ ...btnBlue, marginTop: "4px", background: "#64748b" }}>⊞ Split 2 panels</button>
+          {/* Bouton Appliquer si on édite un block existant */}
+          {editingBlockId ? (
+            <div style={{ marginBottom: "8px", padding: "8px", background: "rgba(37,99,235,0.06)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: "6px" }}>
+              <div style={{ fontSize: "8px", color: "#2563eb", fontWeight: 700, marginBottom: "6px" }}>✏️ MODIFICATION EN COURS</div>
+              <button onClick={applyBlockEdit} style={{ ...btnBlue, background: "#2563eb", marginBottom: "4px" }}>✅ Appliquer les changements</button>
+              <button onClick={() => setEditingBlockId(null)} style={{ width: "100%", padding: "5px", background: "none", border: "1px solid #ddd", color: "#888", fontSize: "9px", cursor: "pointer", borderRadius: "3px" }}>Annuler</button>
+            </div>
+          ) : (
+            <>
+              <button onClick={addPanel} style={btnBlue}>+ Panel simple</button>
+              <button onClick={addSplit} style={{ ...btnBlue, marginTop: "4px", background: "#64748b" }}>⊞ Split 2 panels</button>
+            </>
+          )}
         </div>
 
         {/* Respiration */}
@@ -1327,6 +1377,8 @@ export default function StudioPage() {
                           }} />
                         ))}
                         <span style={{ fontSize: "10px", color: r.color === "#ffffff" ? "#999" : "#eee", margin: "0 4px" }}>{r.height}px</span>
+                        <button onClick={(e) => { e.stopPropagation(); loadBlockToSidebar(block); }}
+                          style={{ background: "#2563eb", border: "none", color: "white", cursor: "pointer", fontSize: "10px", fontWeight: 700, padding: "4px 8px", borderRadius: "3px" }}>✏️ Modifier</button>
                         <button onClick={(e) => { e.stopPropagation(); deleteBlock(r.id); }}
                           style={{ background: "none", border: "none", color: "#c0392b", cursor: "pointer", fontSize: "14px" }}>🗑</button>
                       </div>
@@ -1353,6 +1405,7 @@ export default function StudioPage() {
                   key={p.id} panel={p} selected={isSelected}
                   onClick={() => setSelectedId(isSelected ? null : p.id)}
                   onImageDrop={handleImageDrop} onDelete={deleteBlock}
+                  onEdit={() => loadBlockToSidebar({ type: "panel", data: p })}
                 />
               );
             })}
