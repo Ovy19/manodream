@@ -75,6 +75,7 @@ const PANEL_HEIGHTS = [
   { label: "Pleine page", h: 680, icon: "⬛" },
   { label: "Cinéma ×1.5", h: 960, icon: "🎬" },
   { label: "Épique ×2", h: 1280, icon: "🌟" },
+  { label: "Saga ×4", h: 2560, icon: "⚡" },
 ];
 
 const PANEL_WIDTHS: { label: string; val: PanelWidth; pct: string }[] = [
