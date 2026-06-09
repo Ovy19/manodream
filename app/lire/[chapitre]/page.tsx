@@ -63,30 +63,47 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
     );
   }
 
-  const fid = `fr-${shape}`;
+  if (shape === "thought") return (
+    <svg viewBox="0 0 200 145" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      <defs>
+        <filter id="th-rough-reader" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="3" seed="7" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.8" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <g filter="url(#th-rough-reader)">
+        <path d={`M 22,52 C 18,30 32,12 52,10 C 62,8 70,14 80,11 C 90,8 98,6 108,9 C 120,7 132,8 142,13 C 155,12 168,20 174,32 C 181,40 182,52 179,63 C 183,74 180,86 173,94 C 165,103 153,107 140,106 C 128,110 115,108 103,107 C 90,109 77,107 66,104 C 53,106 40,101 32,92 C 22,83 18,70 22,58 Z`} fill={bgColor} stroke="#111" strokeWidth="2.2" strokeLinejoin="round"/>
+        <ellipse cx="75" cy="116" rx="9.5" ry="8" fill={bgColor} stroke="#111" strokeWidth="1.8"/>
+        <ellipse cx="63" cy="127" rx="6" ry="5.5" fill={bgColor} stroke="#111" strokeWidth="1.5"/>
+        <ellipse cx="53" cy="136" rx="3.8" ry="3.5" fill={bgColor} stroke="#111" strokeWidth="1.3"/>
+      </g>
+      <foreignObject x="24" y="16" width="152" height="82">
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontFamily: `'Nunito', sans-serif`, fontSize: `${Math.min(fontSize, 16)}px`, fontWeight: 500, color: color === "#000000" || color === "#111111" ? "#2a2a2a" : color, fontStyle: "italic", textAlign, width: "100%", lineHeight: 1.5, letterSpacing: "0.2px", wordBreak: "break-word", whiteSpace: "pre-wrap", padding: "0 6px" }}>{text}</span>
+        </div>
+      </foreignObject>
+    </svg>
+  );
+
+  const fid2 = `fr-${shape}`;
   return (
     <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       <defs>
-        <filter id={fid}><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="5" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/></filter>
+        <filter id={fid2}><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="5" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/></filter>
       </defs>
       {shape === "round" && <>
         <ellipse cx="103" cy="57" rx="94" ry="43" fill="rgba(0,0,0,0.15)"/>
-        <g filter={`url(#${fid})`}><ellipse cx="100" cy="54" rx="94" ry="43" fill={bgColor} stroke="#111" strokeWidth="2.5"/></g>
+        <g filter={`url(#${fid2})`}><ellipse cx="100" cy="54" rx="94" ry="43" fill={bgColor} stroke="#111" strokeWidth="2.5"/></g>
         <path d="M 68,93 L 52,128 L 82,97 Z" fill={bgColor} stroke="#111" strokeWidth="2"/>
       </>}
       {shape === "rect" && <>
         <rect x="3" y="4" width="194" height="92" rx="4" fill="rgba(0,0,0,0.15)"/>
-        <g filter={`url(#${fid})`}><rect x="0" y="0" width="194" height="92" rx="4" fill={bgColor} stroke="#111" strokeWidth="2.5"/></g>
+        <g filter={`url(#${fid2})`}><rect x="0" y="0" width="194" height="92" rx="4" fill={bgColor} stroke="#111" strokeWidth="2.5"/></g>
         <path d="M 68,89 L 52,128 L 82,93 Z" fill={bgColor} stroke="#111" strokeWidth="2"/>
       </>}
       {(shape === "shout" || shape === "explosion") && (
-        <polygon points="100,5 120,35 155,20 145,55 185,50 165,75 190,95 155,90 160,125 130,105 120,130 100,108 80,130 70,105 40,125 45,90 10,95 35,75 15,50 55,55 45,20 80,35" fill={bgColor} stroke="#111" strokeWidth="2.5" filter={`url(#${fid})`}/>
+        <polygon points="100,5 120,35 155,20 145,55 185,50 165,75 190,95 155,90 160,125 130,105 120,130 100,108 80,130 70,105 40,125 45,90 10,95 35,75 15,50 55,55 45,20 80,35" fill={bgColor} stroke="#111" strokeWidth="2.5" filter={`url(#${fid2})`}/>
       )}
-      {shape === "thought" && <>
-        <ellipse cx="100" cy="54" rx="88" ry="42" fill={bgColor} stroke="#111" strokeWidth="2.5" filter={`url(#${fid})`}/>
-        <circle cx="72" cy="100" r="8" fill={bgColor} stroke="#111" strokeWidth="2"/>
-        <circle cx="58" cy="116" r="5" fill={bgColor} stroke="#111" strokeWidth="1.5"/>
-      </>}
       <foreignObject x="10" y="8" width="180" height="80">
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontFamily: dialogFont, fontSize: `${Math.min(fontSize, 16)}px`, fontWeight: 700, color, textTransform: "uppercase", textAlign, width: "100%", lineHeight: 1.3, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</span>

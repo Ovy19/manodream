@@ -49,6 +49,7 @@ interface Bubble {
   color: string;
   bgColor: string;
   textAlign?: "left" | "center" | "right";
+  font?: string;
 }
 
 // SFX = onomatopée style webtoon (BAM, BOUM, TCHAC...)
@@ -109,16 +110,31 @@ const SFX_PRESETS = [
 ];
 
 const BUBBLE_SHAPES: { shape: BubbleShape; label: string; icon: string }[] = [
-  { shape: "round", label: "Ronde", icon: "💬" },
-  { shape: "rect", label: "Rectangle", icon: "🗨️" },
-  { shape: "explosion", label: "Explosive", icon: "💥" },
-  { shape: "shout2", label: "Cri ondulé", icon: "🌊" },
-  { shape: "thought", label: "Pensée", icon: "💭" },
-  { shape: "whisper", label: "Impact", icon: "🌟" },
-  { shape: "cloud", label: "Nuage", icon: "☁️" },
-  { shape: "shout", label: "Cri étoile", icon: "📢" },
-  { shape: "narration", label: "Narration", icon: "📋" },
-  { shape: "caption", label: "Caption", icon: "🎬" },
+  { shape: "round",     label: "Ronde",      icon: "💬" },
+  { shape: "rect",      label: "Rectangle",  icon: "🗨️" },
+  { shape: "explosion", label: "Explosive",  icon: "💥" },
+  { shape: "shout2",    label: "Cri ondulé", icon: "🌊" },
+  { shape: "thought",   label: "Pensée",     icon: "💭" },
+  { shape: "whisper",   label: "Impact",     icon: "🌟" },
+  { shape: "cloud",     label: "Nuage",      icon: "☁️" },
+  { shape: "shout",     label: "Cri étoile", icon: "📢" },
+  { shape: "narration", label: "Narration",  icon: "📋" },
+  { shape: "caption",   label: "Caption",    icon: "🎬" },
+];
+
+const BUBBLE_FONTS = [
+  { key: "oswald",      label: "Oswald",            family: "var(--font-oswald,'Oswald',sans-serif)" },
+  { key: "bangers",     label: "Bangers",            family: "var(--font-bangers,'Bangers',sans-serif)" },
+  { key: "action-man",  label: "Action Man",         family: "'Action Man',sans-serif" },
+  { key: "comic-book",  label: "Comic Book",         family: "'Comic Book',sans-serif" },
+  { key: "anime-ace",   label: "Anime Ace",          family: "'Anime Ace',sans-serif" },
+  { key: "badaboom",    label: "Badaboom BB",        family: "'Badaboom BB',sans-serif" },
+  { key: "smackattack", label: "SmackAttack BB",     family: "'SmackAttack BB',sans-serif" },
+  { key: "acme",        label: "ACME Secret Agent",  family: "'ACME Secret Agent',sans-serif" },
+  { key: "comic-chuck", label: "Comic Chuck",        family: "'Comic Chuck',sans-serif" },
+  { key: "ames",        label: "Ames",               family: "'Ames',sans-serif" },
+  { key: "komika",      label: "Komika Text",        family: "'Komika Text',sans-serif" },
+  { key: "nunito",      label: "Nunito (doux)",      family: "var(--font-nunito,'Nunito',serif)" },
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 8);
@@ -192,16 +208,20 @@ function HandDrawnBox({ bgColor, textColor, text, fontSize, align, bold, mangaFo
 }
 
 // ── SVG BULLES ──
-function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center" }: { shape: BubbleShape; text: string; fontSize: number; color: string; bgColor: string; textAlign?: "left" | "center" | "right" }) {
+function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center", font }: {
+  shape: BubbleShape; text: string; fontSize: number;
+  color: string; bgColor: string;
+  textAlign?: "left" | "center" | "right";
+  font?: string;
+}) {
   const stroke = "#111111";
-  const dialogFont = "var(--font-oswald, 'Oswald', 'Rajdhani', sans-serif)";
-  const mangaFont = "var(--font-bangers, 'Bangers', 'Bebas Neue', sans-serif)";
+  const defaultFont = "var(--font-oswald,'Oswald','Rajdhani',sans-serif)";
+  const mangaFont = "var(--font-bangers,'Bangers','Bebas Neue',sans-serif)";
+  const activeFont = font || defaultFont;
 
-  // ID unique pour les filtres SVG
   const fid = `f${Math.random().toString(36).slice(2,7)}`;
   const sid = `s${Math.random().toString(36).slice(2,7)}`;
 
-  // Filtre commun : légère irrégularité + ombre douce
   const filters = (
     <defs>
       <filter id={fid} x="-8%" y="-8%" width="116%" height="116%">
@@ -214,202 +234,197 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
     </defs>
   );
 
-  // 📋 NARRATION / 🎬 CAPTION — style main levée, police planche originale
   if (shape === "narration") return (
     <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text} fontSize={fontSize + 2} align={textAlign} bold={true} mangaFont={dialogFont} />
+      text={text} fontSize={fontSize + 2} align={textAlign} bold={true} mangaFont={activeFont} />
   );
   if (shape === "caption") return (
     <HandDrawnBox bgColor={bgColor === "#000000" ? "#000000" : "#ffffff"}
       textColor={bgColor === "#000000" ? "#ffffff" : "#111111"}
-      text={text} fontSize={fontSize + 4} align={textAlign} bold={true} mangaFont={dialogFont} />
+      text={text} fontSize={fontSize + 4} align={textAlign} bold={true} mangaFont={activeFont} />
   );
 
-  // 💬 RONDE — style Solo Leveling : ellipse propre, queue fine et sharp
   if (shape === "round") return (
     <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
-      {/* Ombre portée */}
       <ellipse cx="103" cy="57" rx="94" ry="43" fill="rgba(0,0,0,0.18)" filter={`url(#${sid})`}/>
-      {/* Corps bulle */}
       <g filter={`url(#${fid})`}>
         <ellipse cx="100" cy="54" rx="94" ry="43" fill={bgColor} stroke={stroke} strokeWidth="2.5"/>
-        {/* Queue fine et sharp style Solo Leveling — pointe vers le bas gauche */}
         <path d="M 68,93 L 52,128 L 82,97 Z" fill={bgColor} stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
       </g>
-      {/* Texte — Nunito bold, légèrement fondu */}
       <foreignObject x="12" y="10" width="176" height="84">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 800,
-          color: "#111", textAlign: "center", lineHeight: 1.25,
-          letterSpacing: "0.2px",
-          textRendering: "optimizeLegibility",
-        }}>{text}</div>
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily: activeFont, fontSize:`${fontSize}px`, fontWeight:700, color:"#111", textAlign, lineHeight:1.25, letterSpacing:"0.2px", wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
-  // 🗨️ RECTANGLE — queue sharp Solo Leveling
   if (shape === "rect") return (
     <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       {filters}
-      <g filter={`url(#${sid})`}>
-        <rect x="4" y="4" width="192" height="86" rx="5" fill="rgba(0,0,0,0.16)"/>
-      </g>
+      <g filter={`url(#${sid})`}><rect x="4" y="4" width="192" height="86" rx="5" fill="rgba(0,0,0,0.16)"/></g>
       <g filter={`url(#${fid})`}>
         <rect x="3" y="3" width="192" height="85" rx="5" fill={bgColor} stroke={stroke} strokeWidth="2.5"/>
-        {/* Queue fine pointue vers le bas */}
         <path d="M 72,88 L 58,128 L 88,90 Z" fill={bgColor} stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
       </g>
       <foreignObject x="12" y="8" width="176" height="74">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 800,
-          color: "#111", textAlign: "center", lineHeight: 1.25,
-          letterSpacing: "0.2px",
-        }}>{text}</div>
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily: activeFont, fontSize:`${fontSize}px`, fontWeight:700, color:"#111", textAlign, lineHeight:1.25, letterSpacing:"0.2px", wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
-  // 💥 EXPLOSION — starburst avec pointes irrégulières
+  // 💥 ÉCLAT épineux — SVG fidèle bulle5
   if (shape === "explosion") return (
-    <svg viewBox="0 0 200 145" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {filters}
-      <g filter={`url(#${sid})`}>
-        <polygon points="100,3 122,35 162,12 148,50 198,50 164,78 190,118 142,102 134,142 100,106 66,142 58,102 10,118 36,78 2,50 52,50 38,12 78,35" fill="rgba(0,0,0,0.15)"/>
-      </g>
-      <g filter={`url(#${fid})`}>
-        <polygon points="100,3 122,35 162,12 148,50 198,50 164,78 190,118 142,102 134,142 100,106 66,142 58,102 10,118 36,78 2,50 52,50 38,12 78,35"
-          fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
-      </g>
-      <foreignObject x="28" y="32" width="144" height="82">
+    <svg viewBox="0 0 200 195" style={{ width:"100%", height:"100%", overflow:"visible" }}>
+      <path d="M 44,116 L 12,80 L 52,90 L 26,40 L 66,66 L 76,12 L 104,56 L 140,8 L 140,52 L 188,32 L 156,78 L 196,90 L 154,106 L 180,148 L 138,128 L 156,174 L 112,138 L 108,186 L 80,142 L 56,168 L 68,130 Z"
+        fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+      <foreignObject x="50" y="50" width="102" height="96">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: mangaFont, fontSize: `${fontSize}px`, fontWeight: 900,
-          color: "#111", textAlign: "center", lineHeight: 1.2,
-          letterSpacing: "1px",
-        }}>{text}</div>
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:activeFont, fontSize:`${fontSize}px`, fontWeight:900, color:"#111", textAlign, lineHeight:1.2, wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
-  // 💭 PENSÉE — pointillés, queue en bulles
-  // 🫧 IMPACT — oval blanc avec traits rayonnants style Solo Leveling
+  // 🌟 IMPACT — rayons lumineux blancs style Solo Leveling
   if (shape === "whisper") return (
-    <svg viewBox="0 0 200 160" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {/* Traits rayonnants — générés autour du centre */}
-      {Array.from({ length: 72 }).map((_, i) => {
-        const angle = (i / 72) * Math.PI * 2;
-        const innerR = 58 + Math.random() * 8;
-        const outerR = 82 + Math.random() * 22;
-        const x1 = 100 + Math.cos(angle) * innerR;
-        const y1 = 80 + Math.sin(angle) * innerR * 0.72;
-        const x2 = 100 + Math.cos(angle) * outerR;
-        const y2 = 80 + Math.sin(angle) * outerR * 0.72;
-        const w = 0.4 + Math.random() * 1.2;
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={stroke} strokeWidth={w} opacity={0.7 + Math.random() * 0.3}/>;
-      })}
+    <svg viewBox="0 0 220 180" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      <defs>
+        <filter id="whisper-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="whisper-halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="white" stopOpacity="0.95"/>
+          <stop offset="55%" stopColor="white" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      {/* Halo lumineux de fond */}
+      <ellipse cx="110" cy="88" rx="105" ry="85" fill="url(#whisper-halo)"/>
+      {/* Rayons blancs épais — style spotlight manga */}
+      <g filter="url(#whisper-glow)">
+        {Array.from({ length: 48 }).map((_, i) => {
+          const angle = (i / 48) * Math.PI * 2;
+          const seed = Math.sin(i * 137.5) * 0.5 + 0.5;
+          const innerR = 62 + seed * 6;
+          const outerR = 98 + seed * 28;
+          const spread = 0.04 + seed * 0.05;
+          const a1 = angle - spread;
+          const a2 = angle + spread;
+          const x1a = 110 + Math.cos(a1) * innerR;
+          const y1a = 88 + Math.sin(a1) * innerR * 0.78;
+          const x1b = 110 + Math.cos(a2) * innerR;
+          const y1b = 88 + Math.sin(a2) * innerR * 0.78;
+          const x2a = 110 + Math.cos(a1) * outerR;
+          const y2a = 88 + Math.sin(a1) * outerR * 0.78;
+          const x2b = 110 + Math.cos(a2) * outerR;
+          const y2b = 88 + Math.sin(a2) * outerR * 0.78;
+          const op = 0.55 + seed * 0.45;
+          return (
+            <polygon key={i}
+              points={`${x1a},${y1a} ${x1b},${y1b} ${x2b},${y2b} ${x2a},${y2a}`}
+              fill="white" opacity={op}
+            />
+          );
+        })}
+      </g>
       {/* Oval blanc principal */}
-      <ellipse cx="100" cy="80" rx="60" ry="44" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <foreignObject x="20" y="38" width="160" height="84">
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 700, color, textAlign, lineHeight: 1.3, textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+      <ellipse cx="110" cy="88" rx="68" ry="52" fill="white" stroke="white" strokeWidth="4"/>
+      {/* Bordure noire fine */}
+      <ellipse cx="110" cy="88" rx="68" ry="52" fill="none" stroke="#111" strokeWidth="1.5"/>
+      <foreignObject x="30" y="42" width="160" height="92">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily: activeFont, fontSize:`${fontSize}px`, fontWeight:800, color:"#111", textAlign, lineHeight:1.25, wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
-  // ☁️ NUAGE — pensée en nuage (bulles rondes)
+  // ☁️ NUAGE pensée — SVG fidèle bulle3
   if (shape === "cloud") return (
-    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {filters}
-      <g filter={`url(#${fid})`}>
-        <circle cx="50" cy="70" r="30" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="80" cy="50" r="34" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="120" cy="45" r="36" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="155" cy="62" r="30" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="140" cy="82" r="26" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="60" cy="85" r="25" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        {/* Remplir le centre */}
-        <rect x="50" y="50" width="110" height="45" fill={bgColor}/>
-      </g>
-      {/* Queue nuage */}
-      <circle cx="62" cy="110" r="8" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <circle cx="52" cy="121" r="5" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <circle cx="44" cy="129" r="3.5" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
-      <foreignObject x="50" y="40" width="105" height="55">
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 600, color, textAlign, lineHeight: 1.3, fontStyle: "italic", textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+    <svg viewBox="0 0 190 148" style={{ width:"100%", height:"100%", overflow:"visible" }}>
+      {/* Ombre */}
+      <path d="M 22,88 C 8,88 2,74 8,63 C 2,51 10,40 24,42 C 20,26 32,14 48,18 C 48,4 64,0 74,10 C 80,2 96,0 102,12 C 108,4 122,6 126,18 C 138,12 152,22 150,36 C 164,36 172,50 166,62 C 174,70 170,84 156,86 L 22,86 Z"
+        fill="rgba(0,0,0,0.15)" transform="translate(3,4)"/>
+      {/* Corps nuage */}
+      <path d="M 22,88 C 8,88 2,74 8,63 C 2,51 10,40 24,42 C 20,26 32,14 48,18 C 48,4 64,0 74,10 C 80,2 96,0 102,12 C 108,4 122,6 126,18 C 138,12 152,22 150,36 C 164,36 172,50 166,62 C 174,70 170,84 156,86 L 22,86 Z"
+        fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
+      {/* Queue — 2 cercles */}
+      <circle cx="55" cy="102" r="9" fill={bgColor} stroke={stroke} strokeWidth="2.2"/>
+      <circle cx="42" cy="116" r="6" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      <circle cx="32" cy="127" r="4" fill={bgColor} stroke={stroke} strokeWidth="1.8"/>
+      <foreignObject x="22" y="8" width="134" height="72">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:activeFont, fontSize:`${fontSize}px`, fontWeight:600, color:"#111", textAlign, lineHeight:1.3, wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
-  // 🌊 CRI ONDULÉ — bords vagues style manga
+  // ⚡ ÉCLAIR — SVG fidèle bulle2 (oval + ombre épaisse + queue zigzag)
   if (shape === "shout2") return (
-    <svg viewBox="0 0 200 130" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {filters}
-      <g filter={`url(#${fid})`}>
-        <path d="M 10,30 Q 20,10 35,25 Q 45,5 60,22 Q 75,5 90,20 Q 105,2 120,18 Q 135,5 150,20 Q 165,5 180,22 Q 195,15 195,35 Q 200,50 190,65 Q 200,80 190,95 Q 195,110 180,108 Q 165,125 150,108 Q 135,125 120,110 Q 105,128 90,112 Q 75,128 60,112 Q 45,128 30,112 Q 15,125 8,108 Q 0,95 10,80 Q 0,65 10,50 Q 0,35 10,30 Z"
-          fill={bgColor} stroke={stroke} strokeWidth="2.5" strokeLinejoin="round"/>
-        <path d="M 82,108 L 68,128 L 95,110 Z" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      </g>
-      <foreignObject x="18" y="18" width="164" height="78">
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: mangaFont, fontSize: `${fontSize}px`, fontWeight: 700, color, textAlign, lineHeight: 1.2, textTransform: "uppercase", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{text}</div>
+    <svg viewBox="0 0 220 158" style={{ width:"100%", height:"100%", overflow:"visible" }}>
+      {/* Ombre épaisse décalée bas-droite style bulle2 */}
+      <ellipse cx="116" cy="63" rx="100" ry="48" fill="#111"/>
+      {/* Oval blanc */}
+      <ellipse cx="110" cy="57" rx="100" ry="48" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      {/* Queue zigzag / éclair */}
+      <path d="M 84,103 L 68,126 L 82,120 L 64,154 L 78,148 L 94,152 L 78,124 L 96,104 Z"
+        fill={bgColor} stroke={stroke} strokeWidth="2.2" strokeLinejoin="round"/>
+      <foreignObject x="14" y="10" width="192" height="88">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:activeFont, fontSize:`${fontSize}px`, fontWeight:700, color:"#111", textAlign, lineHeight:1.25, wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
+  // 💭 PENSÉE ovale — SVG fidèle bulle1
   if (shape === "thought") return (
-    <svg viewBox="0 0 200 138" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {filters}
-      <g filter={`url(#${fid})`}>
-        <ellipse cx="100" cy="54" rx="90" ry="42" fill={bgColor} stroke={stroke} strokeWidth="2" strokeDasharray="5,3"/>
-        <circle cx="72" cy="104" r="10" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="57" cy="119" r="6" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-        <circle cx="46" cy="130" r="4" fill={bgColor} stroke={stroke} strokeWidth="2"/>
-      </g>
-      <foreignObject x="14" y="14" width="172" height="78">
+    <svg viewBox="0 0 210 168" style={{ width:"100%", height:"100%", overflow:"visible" }}>
+      {/* Ombre */}
+      <ellipse cx="109" cy="63" rx="98" ry="55" fill="rgba(0,0,0,0.12)" transform="translate(3,4)"/>
+      {/* Oval principal propre */}
+      <ellipse cx="108" cy="61" rx="98" ry="55" fill={bgColor} stroke={stroke} strokeWidth="2.2"/>
+      {/* Queue — 3 ovales décroissants */}
+      <ellipse cx="74" cy="124" rx="16" ry="12" fill={bgColor} stroke={stroke} strokeWidth="2"/>
+      <ellipse cx="56" cy="140" rx="11" ry="9" fill={bgColor} stroke={stroke} strokeWidth="1.8"/>
+      <ellipse cx="40" cy="154" rx="7" ry="6" fill={bgColor} stroke={stroke} strokeWidth="1.5"/>
+      <foreignObject x="14" y="10" width="188" height="100">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: dialogFont, fontSize: `${fontSize}px`, fontWeight: 600,
-          color: "#333", textAlign: "center", lineHeight: 1.3,
-          fontStyle: "italic",
-        }}>{text}</div>
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center",
+          fontFamily:`'Anime Ace','Komika Text',sans-serif`,
+          fontSize:`${fontSize}px`, fontWeight:400, color:"#1a1a1a",
+          textAlign, lineHeight:1.45, letterSpacing:"0.4px",
+          wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
 
-  // 📢 CRI
+  // 📢 CRI nuage BAM — SVG fidèle bulle4 (cloud arrondi + halftone)
   return (
-    <svg viewBox="0 0 200 128" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      {filters}
-      <g filter={`url(#${sid})`}>
-        <rect x="5" y="5" width="190" height="82" rx="1" fill="rgba(0,0,0,0.15)"/>
-      </g>
-      <g filter={`url(#${fid})`}>
-        <rect x="3" y="3" width="190" height="80" rx="1" fill={bgColor} stroke={stroke} strokeWidth="3.5"/>
-        <line x1="3" y1="3" x2="193" y2="83" stroke={stroke} strokeWidth="1" opacity="0.12"/>
-        <line x1="193" y1="3" x2="3" y2="83" stroke={stroke} strokeWidth="1" opacity="0.12"/>
-        {/* Queue sharp vers le bas */}
-        <path d="M 82,83 L 70,120 L 100,85 Z" fill={bgColor} stroke={stroke} strokeWidth="2" strokeLinejoin="round"/>
-      </g>
-      <foreignObject x="10" y="8" width="180" height="68">
+    <svg viewBox="0 0 220 120" style={{ width:"100%", height:"100%", overflow:"visible" }}>
+      <defs>
+        <pattern id="bam-dots" x="0" y="0" width="7" height="7" patternUnits="userSpaceOnUse">
+          <circle cx="3.5" cy="3.5" r="1.8" fill="#aaa" opacity="0.5"/>
+        </pattern>
+        <clipPath id="bam-clip">
+          <path d="M 28,100 C 8,100 2,82 10,68 C 2,56 12,42 28,44 C 24,26 40,14 58,18 C 58,4 76,0 86,12 C 94,2 114,0 120,14 C 128,4 150,8 154,24 C 168,16 186,28 184,46 C 200,48 210,64 204,80 C 210,92 200,106 184,104 Z"/>
+        </clipPath>
+      </defs>
+      {/* Ombre */}
+      <path d="M 28,100 C 8,100 2,82 10,68 C 2,56 12,42 28,44 C 24,26 40,14 58,18 C 58,4 76,0 86,12 C 94,2 114,0 120,14 C 128,4 150,8 154,24 C 168,16 186,28 184,46 C 200,48 210,64 204,80 C 210,92 200,106 184,104 Z"
+        fill="rgba(0,0,0,0.15)" transform="translate(3,4)"/>
+      {/* Fond blanc */}
+      <path d="M 28,100 C 8,100 2,82 10,68 C 2,56 12,42 28,44 C 24,26 40,14 58,18 C 58,4 76,0 86,12 C 94,2 114,0 120,14 C 128,4 150,8 154,24 C 168,16 186,28 184,46 C 200,48 210,64 204,80 C 210,92 200,106 184,104 Z"
+        fill={bgColor}/>
+      {/* Halftone dots */}
+      <rect x="0" y="0" width="220" height="120" fill="url(#bam-dots)" clipPath="url(#bam-clip)"/>
+      {/* Contour */}
+      <path d="M 28,100 C 8,100 2,82 10,68 C 2,56 12,42 28,44 C 24,26 40,14 58,18 C 58,4 76,0 86,12 C 94,2 114,0 120,14 C 128,4 150,8 154,24 C 168,16 186,28 184,46 C 200,48 210,64 204,80 C 210,92 200,106 184,104 Z"
+        fill="none" stroke={stroke} strokeWidth="3.5" strokeLinejoin="round"/>
+      <foreignObject x="20" y="12" width="176" height="84">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <div style={{
-          width: "100%", height: "100%",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: mangaFont, fontSize: `${fontSize + 2}px`, fontWeight: 900,
-          color: "#111", textAlign: "center", lineHeight: 1.2,
-          letterSpacing: "2px", textTransform: "uppercase",
-        }}>{text}</div>
+        <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:activeFont, fontSize:`${fontSize+2}px`, fontWeight:900, color:"#111", textAlign, lineHeight:1.2, letterSpacing:"1px", wordBreak:"break-word", whiteSpace:"pre-wrap" }}>{text}</div>
       </foreignObject>
     </svg>
   );
@@ -604,6 +619,7 @@ export default function StudioPage() {
   const [bubbleFontSize, setBubbleFontSize] = useState(14);
   const [bubbleBg, setBubbleBg] = useState("#ffffff");
   const [bubbleColor, setBubbleColor] = useState("#000000");
+  const [bubbleFont, setBubbleFont] = useState(BUBBLE_FONTS[0].key);
 
   // Save / preview
   const [titre, setTitre] = useState("Épisode 1");
@@ -842,10 +858,12 @@ export default function StudioPage() {
   };
 
   const addBubble = () => {
+    const selectedFontObj = BUBBLE_FONTS.find(f => f.key === bubbleFont);
     const b: Bubble = {
       id: uid(), shape: bubbleShape, text: bubbleText,
       x: 80, y: getScrollY(), width: 160, height: 100,
       fontSize: bubbleFontSize, color: bubbleColor, bgColor: bubbleBg,
+      font: selectedFontObj?.family,
     };
     setBubbles((prev) => [...prev, b]);
     setSelectedBubble(b.id);
@@ -1145,6 +1163,16 @@ export default function StudioPage() {
             <input type="range" min="10" max="28" value={bubbleFontSize} onChange={(e) => setBubbleFontSize(Number(e.target.value))} style={{ flex: 1, accentColor: "#c0392b" }} />
             <span style={{ fontSize: "10px", color: "#888", width: "20px" }}>{bubbleFontSize}</span>
           </div>
+          {/* Sélecteur de police */}
+          <div style={{ marginBottom: "8px" }}>
+            <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px", letterSpacing: "0.5px" }}>POLICE</div>
+            <select value={bubbleFont} onChange={e => setBubbleFont(e.target.value)}
+              style={{ width: "100%", padding: "6px 8px", border: "1px solid #e2e8f0", borderRadius: "4px", fontSize: "12px", background: "#fff", cursor: "pointer", fontFamily: BUBBLE_FONTS.find(f => f.key === bubbleFont)?.family }}>
+              {BUBBLE_FONTS.map(f => (
+                <option key={f.key} value={f.key} style={{ fontFamily: f.family }}>{f.label}</option>
+              ))}
+            </select>
+          </div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
             <div><div style={{ fontSize: "8px", color: "#888", marginBottom: "2px" }}>Fond</div>
               <input type="color" value={bubbleBg} onChange={(e) => setBubbleBg(e.target.value)} style={{ width: "34px", height: "26px", border: "1px solid #ccc", cursor: "pointer", padding: 0 }} /></div>
@@ -1202,6 +1230,20 @@ export default function StudioPage() {
                 <input type="range" min="10" max="36" value={b.fontSize}
                   onChange={e => update({ fontSize: Number(e.target.value) })}
                   style={{ width: "100%", marginBottom: "8px", accentColor: "#c0392b" }} />
+
+                {/* Police */}
+                <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px" }}>POLICE</div>
+                <select
+                  value={BUBBLE_FONTS.find(f => f.family === b.font)?.key ?? "oswald"}
+                  onChange={e => {
+                    const fObj = BUBBLE_FONTS.find(f => f.key === e.target.value);
+                    update({ font: fObj?.family });
+                  }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1px solid #e2e8f0", borderRadius: "4px", fontSize: "12px", background: "#fff", cursor: "pointer", marginBottom: "8px", fontFamily: b.font }}>
+                  {BUBBLE_FONTS.map(f => (
+                    <option key={f.key} value={f.key} style={{ fontFamily: f.family }}>{f.label}</option>
+                  ))}
+                </select>
 
                 {/* Alignement texte */}
                 <div style={{ fontSize: "8px", color: "#888", marginBottom: "4px" }}>ALIGNEMENT</div>
@@ -1385,7 +1427,7 @@ export default function StudioPage() {
                 {/* Bulles */}
                 {bubbles.map(bubble => (
                   <div key={bubble.id} style={{ position: "absolute", left: bubble.x, top: bubble.y, width: bubble.width, height: bubble.height, pointerEvents: "none" }}>
-                    <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} textAlign={bubble.textAlign ?? "center"} />
+                    <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} textAlign={bubble.textAlign ?? "center"} font={bubble.font} />
                   </div>
                 ))}
                 {/* SFX */}
@@ -1612,9 +1654,9 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
             fontSize: `${bubble.fontSize}px`, textAlign: bubble.textAlign ?? "center",
             padding: "10px 14px", zIndex: 20, borderRadius: "4px",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: (bubble.shape === "narration" || bubble.shape === "caption")
+            fontFamily: bubble.font || ((bubble.shape === "narration" || bubble.shape === "caption")
               ? "var(--font-nunito, 'Nunito', Georgia, serif)"
-              : "var(--font-oswald, 'Oswald', sans-serif)",
+              : "var(--font-oswald, 'Oswald', sans-serif)"),
             fontWeight: 700,
             fontStyle: (bubble.shape === "narration" || bubble.shape === "caption") ? "italic" : "normal",
             textTransform: (bubble.shape === "narration" || bubble.shape === "caption") ? "none" : "uppercase",
@@ -1625,7 +1667,7 @@ function BubbleEl({ bubble, selected, editing, onSelect, onDrag, onEdit, onTextC
           }}
         >{bubble.text}</div>
       ) : (
-        <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} textAlign={bubble.textAlign ?? "center"} />
+        <BubbleSVG shape={bubble.shape} text={bubble.text} fontSize={bubble.fontSize} color={bubble.color} bgColor={bubble.bgColor} textAlign={bubble.textAlign ?? "center"} font={bubble.font} />
       )}
 
       {/* Barre d'actions flottante au-dessus de la bulle */}
