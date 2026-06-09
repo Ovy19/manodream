@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 // ── Types studio ──
 type BubbleShape = "round" | "rect" | "explosion" | "thought" | "shout" | "narration" | "caption";
@@ -178,6 +180,19 @@ function PlaceholderPanel({ label }: { label: string }) {
 export default function LecteurPage({ params }: { params: Promise<{ chapitre: string }> }) {
   const [chapitre, setChapitre] = useState("1");
   const [studioProject, setStudioProject] = useState<StudioProject | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
+
+  // ── Vérification auth — redirige si non connecté ──
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace("/auth/login?redirect=" + encodeURIComponent(window.location.pathname));
+      } else {
+        setAuthChecked(true);
+      }
+    });
+  }, [router]);
 
   useEffect(() => { params.then((p) => setChapitre(p.chapitre)); }, [params]);
 
@@ -188,6 +203,13 @@ export default function LecteurPage({ params }: { params: Promise<{ chapitre: st
       else setStudioProject(null);
     } catch { setStudioProject(null); }
   }, [chapitre]);
+
+  // Écran de chargement pendant la vérif auth
+  if (!authChecked) return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#06060a" }}>
+      <div style={{ color: "#c0392b", fontSize: "18px", fontFamily: "sans-serif" }}>⏳ Vérification...</div>
+    </div>
+  );
 
   const ep = EPISODES[chapitre];
   const epNum = parseInt(chapitre);
