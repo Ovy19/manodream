@@ -442,20 +442,21 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
 }
 
 // ── PANEL COMPOSANT ──
-async function uploadToSupabase(file: File): Promise<string> {
-  const ext = file.name.split(".").pop() || "jpg";
-  const path = `panels/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await supabase.storage.from("panel-images").upload(path, file, { upsert: false, contentType: file.type });
-  if (error) {
-    // Fallback : lire en base64 si upload échoue
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => resolve(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    });
-  }
-  const { data } = supabase.storage.from("panel-images").getPublicUrl(path);
-  return data.publicUrl;
+async function compressImage(file: File, maxWidth = 1400, quality = 0.82): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const blobUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(blobUrl);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.src = blobUrl;
+  });
 }
 
 function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: {
@@ -474,7 +475,7 @@ function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: 
     const file = e.dataTransfer.files[0];
     if (file?.type.startsWith("image/")) {
       setUploading(true);
-      const url = await uploadToSupabase(file);
+      const url = await compressImage(file);
       setUploading(false);
       onImageDrop(panel.id, url);
     }
@@ -484,7 +485,7 @@ function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: 
     const file = e.target.files?.[0];
     if (file) {
       setUploading(true);
-      const url = await uploadToSupabase(file);
+      const url = await compressImage(file);
       setUploading(false);
       onImageDrop(panel.id, url);
     }
@@ -586,7 +587,7 @@ function SubPanel({ sp, onImageDrop, onDelete, parentSelected }: { sp: WebtoonPa
     const file = e.dataTransfer.files[0];
     if (file?.type.startsWith("image/")) {
       setUploading(true);
-      const url = await uploadToSupabase(file);
+      const url = await compressImage(file);
       setUploading(false);
       onImageDrop(sp.id, url);
     }
@@ -595,7 +596,7 @@ function SubPanel({ sp, onImageDrop, onDelete, parentSelected }: { sp: WebtoonPa
     const file = e.target.files?.[0];
     if (file) {
       setUploading(true);
-      const url = await uploadToSupabase(file);
+      const url = await compressImage(file);
       setUploading(false);
       onImageDrop(sp.id, url);
     }
