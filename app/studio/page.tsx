@@ -442,6 +442,22 @@ function BubbleSVG({ shape, text, fontSize, color, bgColor, textAlign = "center"
 }
 
 // ── PANEL COMPOSANT ──
+async function uploadToSupabase(file: File): Promise<string> {
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `panels/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from("panel-images").upload(path, file, { upsert: false, contentType: file.type });
+  if (error) {
+    // Fallback : lire en base64 si upload échoue
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => resolve(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    });
+  }
+  const { data } = supabase.storage.from("panel-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: {
   panel: WebtoonPanel;
   selected: boolean;
@@ -451,18 +467,27 @@ function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: 
   onEdit?: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file?.type.startsWith("image/")) {
-      onImageDrop(panel.id, URL.createObjectURL(file));
+      setUploading(true);
+      const url = await uploadToSupabase(file);
+      setUploading(false);
+      onImageDrop(panel.id, url);
     }
   };
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onImageDrop(panel.id, URL.createObjectURL(file));
+    if (file) {
+      setUploading(true);
+      const url = await uploadToSupabase(file);
+      setUploading(false);
+      onImageDrop(panel.id, url);
+    }
   };
 
   const w = widthPct(panel.width);
@@ -489,6 +514,7 @@ function PanelComp({ panel, selected, onClick, onImageDrop, onDelete, onEdit }: 
         position: "relative", overflow: "hidden",
         boxSizing: "border-box",
       }}>
+        {uploading && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "13px", fontWeight: 700, zIndex: 10 }}>⏳ Upload...</div>}
         {!panel.image && (
           <div style={{ textAlign: "center", color: "#bbb", pointerEvents: "none", userSelect: "none" }}>
             <div style={{ fontSize: "32px", marginBottom: "6px" }}>🖼️</div>
@@ -554,14 +580,25 @@ function SplitPanelComp({ panel, selected, onClick, onImageDrop, onDelete }: {
 
 function SubPanel({ sp, onImageDrop, onDelete, parentSelected }: { sp: WebtoonPanel; onImageDrop: (id: string, src: string) => void; onDelete: (id: string) => void; parentSelected: boolean }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const handleDrop = (e: React.DragEvent) => {
+  const [uploading, setUploading] = useState(false);
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith("image/")) onImageDrop(sp.id, URL.createObjectURL(file));
+    if (file?.type.startsWith("image/")) {
+      setUploading(true);
+      const url = await uploadToSupabase(file);
+      setUploading(false);
+      onImageDrop(sp.id, url);
+    }
   };
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onImageDrop(sp.id, URL.createObjectURL(file));
+    if (file) {
+      setUploading(true);
+      const url = await uploadToSupabase(file);
+      setUploading(false);
+      onImageDrop(sp.id, url);
+    }
   };
 
   return (
@@ -575,7 +612,8 @@ function SubPanel({ sp, onImageDrop, onDelete, parentSelected }: { sp: WebtoonPa
         flexDirection: "column", gap: "6px", overflow: "hidden",
         cursor: "pointer",
       }}>
-        {!sp.image && (
+        {uploading && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "13px", fontWeight: 700, zIndex: 10 }}>⏳</div>}
+        {!sp.image && !uploading && (
           <div style={{ textAlign: "center", color: "#bbb", pointerEvents: "none" }}>
             <div style={{ fontSize: "20px" }}>🖼️</div>
             <div style={{ fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase" }}>Image</div>
