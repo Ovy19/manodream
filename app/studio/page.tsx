@@ -1363,10 +1363,26 @@ export default function StudioPage() {
               padding: "7px 12px", background: "#16a34a", border: "none",
               color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",
             }}>⬇️ Export PNG</button>
-            <button onClick={() => {
+            <button onClick={async () => {
+              // Sauvegarde locale (fallback)
               localStorage.setItem("manodream_episode_1", JSON.stringify({ blocks, bubbles, sfxList, titre, publishedAt: new Date().toISOString() }));
-              setSaveMsg("🚀 Publié dans l'épisode 1 !");
-              setTimeout(() => setSaveMsg(""), 3000);
+              // Sauvegarde Supabase — accessible depuis n'importe quel appareil
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                const payload = {
+                  user_id: user.id, titre, blocks, bubbles, sfx_list: sfxList,
+                  published: true, chapitre: 1,
+                  updated_at: new Date().toISOString()
+                };
+                if (episodeId) {
+                  await supabase.from("episodes").update(payload).eq("id", episodeId);
+                } else {
+                  const { data } = await supabase.from("episodes").insert(payload).select().single();
+                  if (data) setEpisodeId(data.id);
+                }
+              }
+              setSaveMsg("🚀 Publié ! Visible sur tous les appareils");
+              setTimeout(() => setSaveMsg(""), 4000);
             }} style={{
               padding: "7px 12px", background: "#7c3aed", border: "none",
               color: "white", fontSize: "10px", fontWeight: 700, cursor: "pointer", borderRadius: "4px", letterSpacing: "0.5px",

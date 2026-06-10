@@ -196,13 +196,39 @@ export default function LecteurPage({ params }: { params: Promise<{ chapitre: st
 
   useEffect(() => { params.then((p) => setChapitre(p.chapitre)); }, [params]);
 
+  // ── Charge le projet depuis Supabase en priorité, puis localStorage en fallback ──
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(`manodream_episode_${chapitre}`);
-      if (raw) setStudioProject(JSON.parse(raw));
-      else setStudioProject(null);
-    } catch { setStudioProject(null); }
-  }, [chapitre]);
+    if (!authChecked) return;
+    const load = async () => {
+      try {
+        // 1. Essai Supabase
+        const { data } = await supabase
+          .from("episodes")
+          .select("*")
+          .eq("chapitre", parseInt(chapitre))
+          .eq("published", true)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (data) {
+          setStudioProject({
+            blocks: data.blocks || [],
+            bubbles: data.bubbles || [],
+            sfxList: data.sfx_list || [],
+            titre: data.titre || "Épisode",
+          });
+          return;
+        }
+      } catch { /* pas de données Supabase */ }
+      // 2. Fallback localStorage
+      try {
+        const raw = localStorage.getItem(`manodream_episode_${chapitre}`);
+        if (raw) setStudioProject(JSON.parse(raw));
+        else setStudioProject(null);
+      } catch { setStudioProject(null); }
+    };
+    load();
+  }, [chapitre, authChecked]);
 
   // Écran de chargement pendant la vérif auth
   if (!authChecked) return (
