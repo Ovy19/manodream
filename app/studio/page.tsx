@@ -64,9 +64,20 @@ interface SFX {
   rotation: number; // degrés
 }
 
+interface NarrativeText {
+  id: string;
+  text: string;
+  fontSize: number;
+  color: string;
+  bgColor: string;
+  paddingV: number;
+  font?: string;
+}
+
 type Block =
   | { type: "panel"; data: WebtoonPanel }
-  | { type: "respiration"; data: Respiration };
+  | { type: "respiration"; data: Respiration }
+  | { type: "texte"; data: NarrativeText };
 
 // ── CONSTANTES ──
 const PANEL_HEIGHTS = [
@@ -613,6 +624,13 @@ export default function StudioPage() {
   const [respColor, setRespColor] = useState("#ffffff");
   const [respHeight, setRespHeight] = useState(200);
 
+  // Narrative text block controls
+  const [narText, setNarText] = useState("J'AI OUVERT LES YEUX DANS UNE CHAMBRE D'HÔPITAL.");
+  const [narFontSize, setNarFontSize] = useState(28);
+  const [narColor, setNarColor] = useState("#111111");
+  const [narBg, setNarBg] = useState("#ffffff");
+  const [narPaddingV, setNarPaddingV] = useState(48);
+
   // Bubble controls
   const [bubbleShape, setBubbleShape] = useState<BubbleShape>("round");
   const [bubbleText, setBubbleText] = useState("Texte...");
@@ -782,10 +800,11 @@ export default function StudioPage() {
   const applyBlockEdit = () => {
     if (!editingBlockId) return;
     setBlocks(prev => prev.map(b => {
-      const id = (b.data as WebtoonPanel).id || (b.data as Respiration).id;
+      const id = b.data.id;
       if (id !== editingBlockId) return b;
-      if (b.type === "respiration") return { ...b, data: { ...b.data, color: respColor, height: respHeight } };
-      return { ...b, data: { ...b.data as WebtoonPanel, height: panelHeight, width: panelWidth, align: panelAlign, border: panelBorder, borderSize: panelBorderSize, borderTop: panelBorderTop, borderBottom: panelBorderBottom, borderLeft: panelBorderLeft, borderRight: panelBorderRight } };
+      if (b.type === "respiration") return { ...b, data: { ...b.data, color: respColor, height: respHeight } } as Block;
+      if (b.type === "texte") return b;
+      return { ...b, data: { ...b.data as WebtoonPanel, height: panelHeight, width: panelWidth, align: panelAlign, border: panelBorder, borderSize: panelBorderSize, borderTop: panelBorderTop, borderBottom: panelBorderBottom, borderLeft: panelBorderLeft, borderRight: panelBorderRight } } as Block;
     }));
     setEditingBlockId(null);
   };
@@ -794,6 +813,12 @@ export default function StudioPage() {
   const addResp = () => {
     const r: Respiration = { id: uid(), color: respColor, height: respHeight };
     setBlocks((b) => [...b, { type: "respiration", data: r }]);
+  };
+
+  // Ajouter bloc texte narratif
+  const addNarrative = () => {
+    const n: NarrativeText = { id: uid(), text: narText, fontSize: narFontSize, color: narColor, bgColor: narBg, paddingV: narPaddingV };
+    setBlocks((b) => [...b, { type: "texte", data: n }]);
   };
 
   // Générer un épisode template webtoon
@@ -1143,6 +1168,32 @@ export default function StudioPage() {
           <button onClick={addResp} style={btnGray}>+ Ajouter espace</button>
         </div>
 
+        {/* Texte narratif */}
+        <div>
+          <div style={L}>📖 Texte narratif</div>
+          <textarea value={narText} onChange={(e) => setNarText(e.target.value)}
+            rows={3} style={{ ...inputS, marginBottom: "6px", resize: "vertical", lineHeight: 1.4 }} />
+          <div style={{ fontSize: "9px", color: "#888", letterSpacing: "1px", marginBottom: "4px" }}>TAILLE : {narFontSize}px</div>
+          <input type="range" min="14" max="60" step="2" value={narFontSize} onChange={(e) => setNarFontSize(Number(e.target.value))}
+            style={{ width: "100%", marginBottom: "8px", accentColor: "#c0392b" }} />
+          <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "9px", color: "#aaa", marginBottom: "3px" }}>TEXTE</div>
+              <input type="color" value={narColor} onChange={(e) => setNarColor(e.target.value)}
+                style={{ width: "100%", height: "28px", border: "1px solid #ccc", cursor: "pointer", padding: 0, borderRadius: "3px" }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "9px", color: "#aaa", marginBottom: "3px" }}>FOND</div>
+              <input type="color" value={narBg} onChange={(e) => setNarBg(e.target.value)}
+                style={{ width: "100%", height: "28px", border: "1px solid #ccc", cursor: "pointer", padding: 0, borderRadius: "3px" }} />
+            </div>
+          </div>
+          <div style={{ fontSize: "9px", color: "#888", letterSpacing: "1px", marginBottom: "4px" }}>PADDING VERTICAL : {narPaddingV}px</div>
+          <input type="range" min="16" max="120" step="8" value={narPaddingV} onChange={(e) => setNarPaddingV(Number(e.target.value))}
+            style={{ width: "100%", marginBottom: "8px", accentColor: "#c0392b" }} />
+          <button onClick={addNarrative} style={btnGray}>+ Ajouter texte narratif</button>
+        </div>
+
         {/* Bulles */}
         <div>
           <div style={L}>💬 Bulles de dialogue</div>
@@ -1418,6 +1469,14 @@ export default function StudioPage() {
             <div style={{ width: "800px", maxWidth: "100vw", marginTop: "20px", marginBottom: "40px" }}>
               <div ref={canvasRef} style={{ width: "100%", background: "#fff", position: "relative", pointerEvents: "none" }}>
                 {blocks.map((block) => {
+                  if (block.type === "texte") {
+                    const n = block.data as NarrativeText;
+                    return (
+                      <div key={n.id} style={{ width: "100%", background: n.bgColor, padding: `${n.paddingV}px 40px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <p style={{ fontFamily: n.font || "'Anime Ace', 'Bangers', sans-serif", fontSize: `${n.fontSize}px`, color: n.color, textAlign: "center", letterSpacing: "0.05em", lineHeight: 1.3, margin: 0 }}>{n.text}</p>
+                      </div>
+                    );
+                  }
                   if (block.type === "respiration") {
                     const r = block.data as Respiration;
                     return <div key={r.id} style={{ width: "100%", height: r.height, background: r.color }} />;
@@ -1483,6 +1542,26 @@ export default function StudioPage() {
         {!preview && (
           <div ref={canvasRef} style={{ width: "100%", maxWidth: "800px", background: "#fff", position: "relative", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
             {blocks.map((block) => {
+              if (block.type === "texte") {
+                const n = block.data as NarrativeText;
+                const isSelected = selectedId === n.id;
+                return (
+                  <div key={n.id} onClick={() => setSelectedId(isSelected ? null : n.id)}
+                    style={{ width: "100%", background: n.bgColor, padding: `${n.paddingV}px 40px`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", cursor: "pointer", outline: isSelected ? "2px dashed #c0392b" : "none", position: "relative" }}>
+                    <p style={{ fontFamily: n.font || "'Anime Ace', 'Bangers', sans-serif", fontSize: `${n.fontSize}px`, color: n.color, textAlign: "center", letterSpacing: "0.05em", lineHeight: 1.3, margin: 0 }}>{n.text}</p>
+                    {isSelected && (
+                      <div style={{ position: "absolute", top: "6px", right: "8px", display: "flex", gap: "6px" }}>
+                        <button onClick={(e) => { e.stopPropagation();
+                          const newText = prompt("Texte narratif :", n.text);
+                          if (newText !== null) setBlocks((prev) => prev.map((b) => b.type === "texte" && b.data.id === n.id ? { ...b, data: { ...b.data, text: newText } } : b));
+                        }} style={{ background: "#2563eb", border: "none", color: "white", cursor: "pointer", fontSize: "10px", fontWeight: 700, padding: "4px 8px", borderRadius: "3px" }}>✏️ Éditer</button>
+                        <button onClick={(e) => { e.stopPropagation(); deleteBlock(n.id); }}
+                          style={{ background: "none", border: "none", color: "#c0392b", cursor: "pointer", fontSize: "14px" }}>🗑</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               if (block.type === "respiration") {
                 const r = block.data as Respiration;
                 const isSelected = selectedId === r.id;

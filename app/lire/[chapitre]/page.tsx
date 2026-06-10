@@ -120,6 +120,14 @@ function StudioReader({ project }: { project: StudioProject }) {
   return (
     <div style={{ width: "100%", background: "#fff", position: "relative" }}>
       {blocks.map((block) => {
+        if (block.type === "texte") {
+          const n = block.data as unknown as { id: string; text: string; fontSize: number; color: string; bgColor: string; paddingV: number; font?: string };
+          return (
+            <div key={n.id} style={{ width: "100%", background: n.bgColor, padding: `${n.paddingV}px 40px`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <p style={{ fontFamily: n.font || "'Anime Ace', 'Bangers', sans-serif", fontSize: `${n.fontSize}px`, color: n.color, textAlign: "center", letterSpacing: "0.05em", lineHeight: 1.3, margin: 0 }}>{n.text}</p>
+            </div>
+          );
+        }
         if (block.type === "respiration") {
           const r = block.data as { id: string; color: string; height: number };
           return <div key={r.id} style={{ width: "100%", height: r.height, background: r.color }} />;
